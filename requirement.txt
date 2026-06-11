@@ -1,0 +1,56 @@
+Runtime requirements:
+
+- Node.js 18 or newer
+- npm
+- PostgreSQL
+- Public HTTPS domain for Meta WhatsApp webhook callbacks
+- Valid SSL certificate files for the HTTPS server
+- Meta WhatsApp Cloud API app, phone number ID, and access token
+
+NPM dependencies:
+
+- axios ^1.17.0
+- dotenv ^17.4.2
+- express ^5.2.1
+- pg ^8.21.0
+
+Environment variables:
+
+- PORT
+- DB_USER
+- DB_HOST
+- DB_NAME
+- DB_PASSWORD
+- DB_PORT
+- PHONE_NUMBER_ID
+- WHATSAPP_ACCESS_TOKEN
+- WA_VERIFY_TOKEN
+
+Database table:
+
+```sql
+CREATE TABLE IF NOT EXISTS whatsapp_leads (
+  id SERIAL PRIMARY KEY,
+  phone VARCHAR(32) UNIQUE NOT NULL,
+  name VARCHAR(255),
+  first_message TEXT,
+  welcome_sent BOOLEAN DEFAULT FALSE,
+  brochure_sent BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  last_message_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run commands:
+
+```bash
+npm start
+npm run dev
+```
