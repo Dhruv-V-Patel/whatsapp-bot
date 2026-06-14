@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Message Logs</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="messageslog.css">
+
+</head>
+<body>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <nav class="top-nav">
+    <button id="chatPageBtn"><i class="fa-solid fa-comments"></i> Chat View</button>
+    <button id="logPageBtn" class="active"><i class="fa-solid fa-table-list"></i> Message Log</button>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
+  </nav>
+
+  <h2>
+    <i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> WhatsApp Message Log
+    <span class="last-updated"><i class="fa-solid fa-clock-rotate-left"></i> Last updated: <span id="lastUpdated">Just now</span></span>
+  </h2>
+
+  <div class="controls-bar">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="searchInput" placeholder="Search by name or phone...">
+    </div>
+    <div class="filter-group">
+      <label for="statusFilter"><i class="fa-solid fa-filter"></i> Status:</label>
+      <select id="statusFilter"><option value="">All</option><option value="New Lead">New Lead</option><option value="Repeated">Repeated</option></select>
+    </div>
+    <div class="filter-group">
+      <label for="dateFrom"><i class="fa-regular fa-calendar"></i> From:</label>
+      <input type="date" id="dateFrom">
+    </div>
+    <div class="filter-group">
+      <label for="dateTo"><i class="fa-regular fa-calendar-check"></i> To:</label>
+      <input type="date" id="dateTo">
+    </div>
+    <button class="btn btn-refresh" id="refreshBtn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+    <button class="btn btn-clear" id="clearFilters"><i class="fa-solid fa-rotate-left"></i> Clear</button>
+    <button class="btn btn-download" id="downloadExcel"><i class="fa-solid fa-file-excel"></i> Excel</button>
+    <span class="results-count"><i class="fa-solid fa-list-ol"></i> <span id="countText">0 records</span></span>
+  </div>
+
+  <div class="filter-chips" id="filterChips"></div>
+
+  <div class="table-container">
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable('name')"><i class="fa-solid fa-user"></i> Name <i class="fa-solid fa-sort" id="sort-name"></i></th>
+            <th onclick="sortTable('phone')"><i class="fa-solid fa-phone"></i> Phone <i class="fa-solid fa-sort" id="sort-phone"></i></th>
+            <th><i class="fa-solid fa-message"></i> Message</th>
+            <th onclick="sortTable('time')"><i class="fa-regular fa-clock"></i> Time <i class="fa-solid fa-sort" id="sort-time"></i></th>
+            <th><i class="fa-solid fa-paper-plane"></i> Welcome</th>
+            <th><i class="fa-solid fa-file-pdf"></i> Brochure</th>
+            <th onclick="sortTable('status')"><i class="fa-solid fa-tag"></i> Status <i class="fa-solid fa-sort" id="sort-status"></i></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination">
+      <button id="prevBtn" onclick="changePage(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+      <span class="pagination-info">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+      <button id="nextBtn" onclick="changePage(1)"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="cards-view" id="cardsView"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="messagelogs.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+</body>
+</html>

@@ -1,10 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>WhatsApp Bot Server</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Messages</title>
+    <link rel="stylesheet" href="/app.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<base target="_blank">
 </head>
 <body>
-    <h1>🚀 WhatsApp Bot Running</h1>
-    <p>Server is online.</p>
+    <main class="app-shell">
+        <aside class="sidebar">
+            <header class="sidebar-header">
+                <nav class="top-nav">
+                    <button id="chatPageBtn" class="active"><i class="fa-solid fa-comments fa-icon"></i> Chat View</button>
+                    <button id="logPageBtn"><i class="fa-solid fa-table-list fa-icon"></i> Message Log</button>
+                    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                        <span id="themeIcon"><i class="fa-solid fa-moon"></i></span>
+                        <!-- <span id="themeLabel">Dark</span> -->
+                    </button>
+                </nav>
+                <div class="header-row">
+                    <div>
+                        <p class="eyebrow">WhatsApp Bot</p>
+                        <h1>Messages</h1>
+                    </div>
+                    <button class="icon-button" id="refreshButton" type="button" aria-label="Refresh messages">
+                        <i class="fa-solid fa-arrow-rotate-right fa-icon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <label class="search-box" for="searchInput">
+                <i class="fa-solid fa-magnifying-glass fa-icon"></i>
+                <input id="searchInput" type="search" placeholder="Search contacts or messages">
+                <button class="search-clear" id="clearSearchButton" type="button" aria-label="Clear search">
+                    <i class="fa-solid fa-xmark fa-icon"></i>
+                </button>
+            </label>
+
+            <section class="chat-list" id="chatList" aria-label="Message contacts"></section>
+
+            <footer class="sidebar-footer">
+                <span>Designed &amp; Developed by</span>
+                <a href="https://someshwarai.in/" target="_blank" rel="noopener noreferrer">
+                    Someshwar AI Solutions LLP
+                </a>
+            </footer>
+        </aside>
+
+        <section class="chat-panel">
+            <header class="chat-header" id="chatHeader">
+                <div class="avatar">WA</div>
+                <div>
+                    <h2>Select a chat</h2>
+                    <p>Incoming WhatsApp messages will appear here.</p>
+                </div>
+                <button id="mobileBackBtn" class="icon-button">
+  <i class="fa-solid fa-arrow-left fa-icon"></i>
+</button>
+            </header>
+
+            <div class="messages" id="messageList">
+                <div class="empty-state">
+                    <h2>No chat selected</h2>
+                    <p>Choose a contact from the left to view their WhatsApp messages.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+      // Theme toggle functionality
+      (function() {
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        // const themeLabel = document.getElementById('themeLabel');
+        const html = document.documentElement;
+
+        function updateThemeUI(theme) {
+          if (theme === 'dark') {
+            themeIcon.innerHTML = '<i class="fa-solid fa-sun"></i>';
+            // themeLabel.textContent = 'Light';
+            themeToggle.title = 'Switch to light mode';
+          } else {
+            themeIcon.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            // themeLabel.textContent = 'Dark';
+            themeToggle.title = 'Switch to dark mode';
+          }
+        }
+
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeUI(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+          const currentTheme = html.getAttribute('data-theme');
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          html.setAttribute('data-theme', newTheme);
+          localStorage.setItem('theme', newTheme);
+          updateThemeUI(newTheme);
+        });
+      })();
+    </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/app.js" defer></script>
 </body>
 </html>

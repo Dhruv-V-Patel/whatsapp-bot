@@ -28,7 +28,7 @@ class WhatsAppService {
 async sendWelcome(phone) {
   // Gujarati
   await axios.post(
-    `https://graph.facebook.com/v23.0/${process.env.PHONE_NUMBER_ID}/messages`,
+    `https://graph.facebook.com/v25.0/${process.env.PHONE_NUMBER_ID}/messages`,
     {
       messaging_product: "whatsapp",
       to: phone,
@@ -72,7 +72,7 @@ visit site: https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6
 
   // Hindi
   await axios.post(
-    `https://graph.facebook.com/v23.0/${process.env.PHONE_NUMBER_ID}/messages`,
+    `https://graph.facebook.com/v25.0/${process.env.PHONE_NUMBER_ID}/messages`,
     {
       messaging_product: "whatsapp",
       to: phone,
@@ -115,15 +115,15 @@ visit site: https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6
 
   async sendBrochure(phone) {
     return axios.post(
-      `https://graph.facebook.com/v23.0/${process.env.PHONE_NUMBER_ID}/messages`,
+      `https://graph.facebook.com/v25.0/${process.env.PHONE_NUMBER_ID}/messages`,
       {
         messaging_product: "whatsapp",
         to: phone,
         type: "document",
         document: {
-          link:`https://someshwarai.in/someshwar.pdf`,
-          filename:
-            "Brochure.pdf"
+          // link:`https://someshwarai.in/someshwar.pdf`,
+          id: process.env.BROCHURE_MEDIA_ID,
+          filename: "Brochure.pdf"
         }
       },
       {
@@ -136,7 +136,7 @@ visit site: https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6
 
    async sendCustomeMessage(phone) {
     return await axios.post(
-    `https://graph.facebook.com/v23.0/${process.env.PHONE_NUMBER_ID}/messages`,
+    `https://graph.facebook.com/v25.0/${process.env.PHONE_NUMBER_ID}/messages`,
     {
       messaging_product: "whatsapp",
       to: phone,

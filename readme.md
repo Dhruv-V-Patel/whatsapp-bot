@@ -68,9 +68,9 @@ WHATSAPP_ACCESS_TOKEN=your_whatsapp_cloud_api_token
 WA_VERIFY_TOKEN=your_webhook_verify_token
 ```
 
-## Database Table
+## Database Tables
 
-Create the `whatsapp_leads` table before starting the bot:
+The app creates these tables automatically on startup when PostgreSQL is connected. You can also create them manually:
 
 ```sql
 CREATE TABLE IF NOT EXISTS whatsapp_leads (
@@ -78,11 +78,23 @@ CREATE TABLE IF NOT EXISTS whatsapp_leads (
   phone VARCHAR(32) UNIQUE NOT NULL,
   name VARCHAR(255),
   first_message TEXT,
+  status VARCHAR(50),
   welcome_sent BOOLEAN DEFAULT FALSE,
   brochure_sent BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
   last_message_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+```sql
+CREATE TABLE IF NOT EXISTS whatsapp_messages (
+  id SERIAL PRIMARY KEY,
+  phone VARCHAR(32) NOT NULL,
+  name VARCHAR(255),
+  message TEXT,
+  direction VARCHAR(16) DEFAULT 'incoming',
+  created_at TIMESTAMP DEFAULT NOW()
 );
 ```
 
@@ -104,6 +116,12 @@ The webhook endpoint is:
 
 ```text
 https://your-domain.com/webhook
+```
+
+The frontend inbox is available at:
+
+```text
+https://your-domain.com/
 ```
 
 ## SSL Notes
