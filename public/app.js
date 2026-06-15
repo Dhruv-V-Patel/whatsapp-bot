@@ -486,11 +486,10 @@ document.getElementById("mobileBackBtn")?.addEventListener("click", () => {
 const socket = io();
 
 socket.on("connect", () => {
-  console.log("Socket Connected");
+ 
 });
 
 socket.on("new-message", (msg) => {
-  console.log("New Message", msg);
 
   // reload chat automatically
   loadMessages();

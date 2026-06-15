@@ -10,7 +10,7 @@ const cardsView = document.querySelector("#cardsView");
 const toastContainer = document.querySelector("#toastContainer");
 
 let allData = [], filteredData = [];
-let currentPage = 1, rowsPerPage = 10;
+let currentPage = 1, rowsPerPage = 15;
 let sortColumn = '', sortDirection = 'asc';
 let selectedRows = new Set();
 
@@ -343,12 +343,11 @@ loadLogs();
 const socket = io();
 
 socket.on("connect", () => {
-  console.log("Socket Connected");
+  // console.log("Socket Connected");
 });
 
 socket.on("new-message", (msg) => {
-  console.log("New Message", msg);
-
+  // console.log("New Message", msg);
   // reload chat automatically
   loadLogs();
 });
