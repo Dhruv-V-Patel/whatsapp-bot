@@ -101,7 +101,7 @@ function groupMessages(messages) {
 
     conversation.unread_count = Math.max(
       conversation.unread_count || 0,
-      message.unread_count || 0
+      message.unread_count || 0,
     );
 
     conversation.messages.push(message);
@@ -248,10 +248,7 @@ function renderChatList(options = {}) {
         preview = `${getMediaLabel(mediaType)} Preview Not Available`;
       }
 
-      console.log(
-  conversation.phone,
-  conversation.unread_count
-);
+      //console.log(conversation.phone, conversation.unread_count);
       return `
         <button class="chat-item${isActive}" type="button" data-phone="${escapeHtml(conversation.phone)}">
           <div class="avatar">${escapeHtml(getInitials(conversation.name, conversation.phone))}</div>
@@ -298,13 +295,14 @@ function renderMessages() {
       <div class="avatar">WA</div>
       <div>
         <h2>Select a chat</h2>
-        <p>Incoming WhatsApp messages will appear here.</p>
+        <p>Choose a contact to start viewing messages</p>
       </div>
     `;
     messageList.innerHTML = `
       <div class="empty-state">
-        <h2>No chat selected</h2>
-        <p>Choose a contact from the left to view their WhatsApp messages.</p>
+      <i class="fa-brands fa-whatsapp no-select-contact"></i>
+        <h2>WhatsApp Messages</h2>
+        <p>Select a contact from the left sidebar.</p>
       </div>
     `;
     return;
@@ -316,9 +314,76 @@ function renderMessages() {
       <h2>${escapeHtml(conversation.name)}</h2>
       <p>${escapeHtml(conversation.phone)}</p>
     </div>
+      <div class="chat-menu-wrapper">
+    <button class="chat-menu-btn" id="chatMenuBtn">
+      <i class="fa-solid fa-ellipsis-vertical"></i>
+    </button>
+
+    <div class="chat-dropdown" id="chatDropdown">
+      <button id="clearChatBtn">
+        <i class="fa-solid fa-broom"></i>
+        Clear Chat
+      </button>
+
+      <button id="deleteContactBtn">
+        <i class="fa-solid fa-trash"></i>
+        Delete Contact
+      </button>
+    </div>
+  </div>
   `;
 
+  const menuBtn = document.getElementById("chatMenuBtn");
+  const dropdown = document.getElementById("chatDropdown");
+
+  menuBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle("show");
+  });
+
+  document.addEventListener("click", () => {
+    dropdown?.classList.remove("show");
+  });
   // <div class="message-text">${escapeHtml(message.message || "")}</div>
+  const clearBtn = document.getElementById("clearChatBtn");
+
+  clearBtn?.addEventListener("click", async () => {
+    if (!confirm("Clear chat?")) return;
+
+    console.log("Clear Btn Clicked", selectedPhone);
+
+    const response = await fetch(
+      `/api/messages/clear/${selectedPhone}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    const result = await response.json();
+
+    console.log(result);
+
+    await loadMessages();
+  });
+
+  const deleteBtn = document.getElementById("deleteContactBtn");
+
+  deleteBtn?.addEventListener("click", async () => {
+    if (!confirm("Delete contact?")) return;
+
+    console.log("Delete Btn Clicked", selectedPhone);
+
+    await fetch(
+      `/api/messages/contact/${selectedPhone}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    selectedPhone = null;
+
+    await loadMessages();
+  });
 
   messageList.innerHTML = conversation.messages
     .map(
@@ -347,9 +412,9 @@ async function loadMessages() {
     const data = await response.json();
     conversations = groupMessages(data.messages || []);
 
-    if (!selectedPhone && conversations.length) {
-      selectedPhone = conversations[0].phone;
-    }
+    // if (!selectedPhone && conversations.length) {
+    //   selectedPhone = conversations[0].phone;
+    // }
 
     renderChatList();
     renderMessages();
@@ -364,27 +429,21 @@ async function loadMessages() {
   }
 }
 
-chatList.addEventListener("click", async(event) => {
+chatList.addEventListener("click", async (event) => {
   const item = event.target.closest(".chat-item");
 
   if (!item) return;
 
   selectedPhone = item.dataset.phone;
-  await fetch(
-  `/api/messages/mark-read/${selectedPhone}`,
-  {
-    method: "POST"
+  await fetch(`/api/messages/mark-read/${selectedPhone}`, {
+    method: "POST",
+  });
+
+  const conversation = conversations.find((c) => c.phone === selectedPhone);
+
+  if (conversation) {
+    conversation.unread_count = 0;
   }
-);
-
-const conversation =
-  conversations.find(
-    c => c.phone === selectedPhone
-  );
-
-if (conversation) {
-  conversation.unread_count = 0;
-}
   renderChatList();
   renderMessages();
 });
@@ -422,8 +481,6 @@ const openChat = () => {
 document.getElementById("mobileBackBtn")?.addEventListener("click", () => {
   document.querySelector(".chat-panel").classList.remove("mobile-open");
 });
-
-
 
 //======================== Update the Incomeing Message Without need refresh ===============================
 const socket = io();

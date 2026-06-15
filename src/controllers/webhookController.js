@@ -16,7 +16,7 @@ exports.handleMessage = async (req, res) => {
       req.body.entry?.[0]?.changes?.[0]?.value?.contacts?.[0]?.profile?.name ||
       "Customer";
 
-    const currentLead = await whatsappService.findLead(phone);
+    const lead = await whatsappService.findLead(phone);
 
     // const text = message.text?.body || "";
 
@@ -129,10 +129,10 @@ exports.handleMessage = async (req, res) => {
       io.emit("new-message", savedMessage);
     }
 
-    if (!currentLead) {
+    if (!lead) {
       await whatsappService.saveLead(phone, name, text);
     }
-    //const currentLead = await whatsappService.findLead(phone);
+    const currentLead = await whatsappService.findLead(phone);
 
     console.log("====== Contact Details ==========");
     console.log(`    Name: ${name}`);

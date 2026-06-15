@@ -150,18 +150,77 @@ router.post("/mark-read/:phone", async (req, res) => {
       SET unread_count = 0
       WHERE phone = $1
       `,
-      [req.params.phone]
+      [req.params.phone],
     );
 
     res.json({
-      success: true
+      success: true,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      error: err.message
+      error: err.message,
     });
   }
 });
 
+router.delete("/clear/:phone", async (req, res) => {
+  try {
+    await pool.query(
+      `
+      DELETE FROM whatsapp_messages
+      WHERE phone = $1
+      `,
+      [req.params.phone],
+    );
+    await pool.query(
+      `
+      UPDATE whatsapp_leads
+      SET
+        first_message = NULL,
+        unread_count = 0
+      WHERE phone = $1
+      `,
+      [req.params.phone],
+    );
+
+    res.json({
+      success: true,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
+
+router.delete("/contact/:phone", async (req, res) => {
+  try {
+    await pool.query(
+      `
+      DELETE FROM whatsapp_messages
+      WHERE phone = $1
+      `,
+      [req.params.phone],
+    );
+
+    await pool.query(
+      `
+      DELETE FROM whatsapp_leads
+      WHERE phone = $1
+      `,
+      [req.params.phone],
+    );
+
+    res.json({
+      success: true,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
 module.exports = router;

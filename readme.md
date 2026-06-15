@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS whatsapp_leads (
   brochure_sent BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
+  unread_count INTEGER DEFAULT 0,
   last_message_at TIMESTAMP DEFAULT NOW()
 );
 ```
@@ -94,6 +95,12 @@ CREATE TABLE IF NOT EXISTS whatsapp_messages (
   name VARCHAR(255),
   message TEXT,
   direction VARCHAR(16) DEFAULT 'incoming',
+  message_type VARCHAR(50),
+  media_id TEXT,
+  media_url TEXT,
+  file_name TEXT,
+  mime_type TEXT,
+  payload JSONB,
   created_at TIMESTAMP DEFAULT NOW()
 );
 ```

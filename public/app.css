@@ -612,6 +612,83 @@ h1 {
   flex-shrink: 0;
 }
 
+.chat-user-info {
+  flex: 1;
+}
+
+.chat-menu-wrapper {
+  position: relative;
+  margin-left: auto;
+}
+
+.chat-menu-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+
+  background: transparent;
+  color: var(--text-primary);
+
+  font-size: 18px;
+}
+
+.chat-menu-btn:hover {
+  background: var(--surface-hover);
+}
+
+.chat-dropdown {
+  position: absolute;
+  top: 48px;
+  right: 0;
+
+  width: 180px;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,.15);
+
+  display: none;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.chat-dropdown.show {
+  display: block;
+}
+
+.chat-dropdown button {
+  width: 100%;
+  padding: 12px 15px;
+
+  border: none;
+  background: transparent;
+
+  text-align: left;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  color: var(--text-primary);
+}
+
+.chat-dropdown button:hover {
+  background: var(--surface-hover);
+}
+
+#deleteContactBtn {
+  color: #dc3545;
+}
+
+.no-select-contact{
+    font-size: 100px;
+    margin-bottom: 30px;
+}
 /* .chat-preview-row {
   display: flex;
   align-items: center;
