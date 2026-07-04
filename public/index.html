@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp Messages</title>
     <link rel="stylesheet" href="/app.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-<base target="_blank">
+    <base target="_blank">
 </head>
+
 <body>
     <main class="app-shell">
         <aside class="sidebar">
             <header class="sidebar-header">
                 <nav class="top-nav">
-                    <button id="chatPageBtn" class="active"><i class="fa-solid fa-comments fa-icon"></i> Chat View</button>
+                    <button id="chatPageBtn" class="active"><i class="fa-solid fa-comments fa-icon"></i> Chat
+                        View</button>
                     <button id="logPageBtn"><i class="fa-solid fa-table-list fa-icon"></i> Message Log</button>
                     <button class="theme-toggle" id="themeToggle" title="Toggle theme">
                         <span id="themeIcon"><i class="fa-solid fa-moon"></i></span>
@@ -44,7 +47,7 @@
             <footer class="sidebar-footer">
                 <span>Designed &amp; Developed by</span>
                 <a href="https://someshwarai.in/" target="_blank" rel="noopener noreferrer">
-                    Someshwar AI Solutions LLP
+                    Someshwar AI Solution LLP
                 </a>
             </footer>
         </aside>
@@ -57,8 +60,8 @@
                     <p>Incoming WhatsApp messages will appear here.</p>
                 </div>
                 <button id="mobileBackBtn" class="icon-button">
-  <i class="fa-solid fa-arrow-left fa-icon"></i>
-</button>
+                    <i class="fa-solid fa-arrow-left fa-icon"></i>
+                </button>
             </header>
 
             <div class="messages" id="messageList">
@@ -67,44 +70,62 @@
                     <p>Choose a contact from the left to view their WhatsApp messages.</p>
                 </div>
             </div>
+
+            <div class="message-composer" id="messageComposer">
+
+                <button id="attachBtn" class="composer-icon">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+
+                <input id="messageInput" type="text" placeholder="Type a message">
+
+                <button id="sendBtn" class="composer-icon send">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+
+                <input type="file" id="fileInput" hidden>
+
+            </div>
+
         </section>
     </main>
 
     <script>
-      // Theme toggle functionality
-      (function() {
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        // const themeLabel = document.getElementById('themeLabel');
-        const html = document.documentElement;
+        // Theme toggle functionality
+        (function () {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            // const themeLabel = document.getElementById('themeLabel');
+            const html = document.documentElement;
 
-        function updateThemeUI(theme) {
-          if (theme === 'dark') {
-            themeIcon.innerHTML = '<i class="fa-solid fa-sun"></i>';
-            // themeLabel.textContent = 'Light';
-            themeToggle.title = 'Switch to light mode';
-          } else {
-            themeIcon.innerHTML = '<i class="fa-solid fa-moon"></i>';
-            // themeLabel.textContent = 'Dark';
-            themeToggle.title = 'Switch to dark mode';
-          }
-        }
+            function updateThemeUI(theme) {
+                if (theme === 'dark') {
+                    themeIcon.innerHTML = '<i class="fa-solid fa-sun"></i>';
+                    // themeLabel.textContent = 'Light';
+                    themeToggle.title = 'Switch to light mode';
+                } else {
+                    themeIcon.innerHTML = '<i class="fa-solid fa-moon"></i>';
+                    // themeLabel.textContent = 'Dark';
+                    themeToggle.title = 'Switch to dark mode';
+                }
+            }
 
-        // Check for saved theme preference
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        html.setAttribute('data-theme', savedTheme);
-        updateThemeUI(savedTheme);
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            html.setAttribute('data-theme', savedTheme);
+            updateThemeUI(savedTheme);
 
-        themeToggle.addEventListener('click', () => {
-          const currentTheme = html.getAttribute('data-theme');
-          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-          html.setAttribute('data-theme', newTheme);
-          localStorage.setItem('theme', newTheme);
-          updateThemeUI(newTheme);
-        });
-      })();
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeUI(newTheme);
+            });
+        })();
     </script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/app.js" defer></script>
 </body>
+
 </html>

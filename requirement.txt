@@ -57,8 +57,12 @@ CREATE TABLE IF NOT EXISTS whatsapp_messages (
   file_name TEXT,
   mime_type TEXT,
   payload JSONB,
+  is_first_message BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+ALTER TABLE whatsapp_messages
+ADD COLUMN is_first_message BOOLEAN DEFAULT FALSE;
 ```
 
 Install dependencies:

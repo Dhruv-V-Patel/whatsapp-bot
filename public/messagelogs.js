@@ -302,10 +302,42 @@ function formatDate(iso) {
 }
 
 // ── Clear Filters ──
-function clearAllFilters() {
-  searchInput.value = ''; statusFilter.value = ''; dateFrom.value = ''; dateTo.value = '';
-  applyFilters();
-  showToast('Filters cleared');
+// function clearAllFilters() {
+//   searchInput.value = ''; statusFilter.value = ''; dateFrom.value = ''; dateTo.value = '';
+//   applyFilters();
+//   showToast('Filters cleared');
+// }
+function clearAllFilters(showToastMessage = true) {
+  // Clear inputs
+  searchInput.value = "";
+  statusFilter.value = "";
+  dateFrom.value = "";
+  dateTo.value = "";
+
+  // Reset sorting
+  sortColumn = "";
+  sortDirection = "asc";
+
+  document
+    .querySelectorAll('[id^="sort-"]')
+    .forEach(i => i.className = "fa-solid fa-sort");
+
+  // Reset page
+  currentPage = 1;
+
+  // Remove chips
+  document.getElementById("filterChips").innerHTML = "";
+
+  // Show full data immediately
+  filteredData = [...allData];
+
+  renderTable();
+  renderCards();
+  updatePagination();
+
+  if (showToastMessage) {
+    showToast("Filters cleared");
+  }
 }
 
 // ── Download ──
@@ -329,9 +361,25 @@ searchInput.addEventListener('input', applyFilters);
 statusFilter.addEventListener('change', applyFilters);
 dateFrom.addEventListener('change', applyFilters);
 dateTo.addEventListener('change', applyFilters);
-clearFiltersBtn.addEventListener('click', clearAllFilters);
+// clearFiltersBtn.addEventListener('click', clearAllFilters);
+clearFiltersBtn.addEventListener("click", () => {
+  clearAllFilters();
+});
 downloadBtn.addEventListener('click', downloadExcel);
-document.getElementById('refreshBtn')?.addEventListener('click', loadLogs);
+// document.getElementById('refreshBtn')?.addEventListener('click', loadLogs);
+document.getElementById("refreshBtn")?.addEventListener("click", async () => {
+  try {
+  clearAllFilters(false);
+
+  await loadLogs();
+
+  clearAllFilters(false);
+      showToast("Logs refreshed successfully.", "success");
+  } catch (err) {
+    showToast("Failed to refresh logs.", "error");
+    console.error(err);
+  }
+});
 document.getElementById('logPageBtn')?.addEventListener('click', () => location.href = '/messagelogs');
 document.getElementById('chatPageBtn')?.addEventListener('click', () => location.href = '/');
 

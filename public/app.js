@@ -5,6 +5,7 @@ const searchInput = document.querySelector("#searchInput");
 const searchBox = document.querySelector(".search-box");
 const clearSearchButton = document.querySelector("#clearSearchButton");
 const refreshButton = document.querySelector("#refreshButton");
+const messageComposer = document.getElementById("messageComposer");
 
 let conversations = [];
 let selectedPhone = null;
@@ -17,7 +18,85 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+const attachBtn = document.getElementById("attachBtn");
+const fileInput = document.getElementById("fileInput");
 
+attachBtn.onclick = () => {
+    fileInput.click();
+};
+
+document.getElementById("sendBtn").onclick = async () => {
+
+    const message = messageInput.value.trim();
+
+    if (!message || !selectedPhone)
+        return;
+
+    try {
+
+        const res = await fetch("/api/messages/send", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                phone: selectedPhone,
+                message
+            })
+
+        });
+
+        if (!res.ok)
+            throw new Error();
+
+        messageInput.value = "";
+        // loadMessages();
+
+    } catch {
+
+        alert("Failed to send message.");
+
+    }
+
+};
+
+fileInput.onchange = async () => {
+
+    if (!fileInput.files.length)
+        return;
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        "file",
+        fileInput.files[0]
+    );
+
+    formData.append(
+        "phone",
+        selectedPhone
+    );
+
+    await fetch(
+        "/api/messages/send-file",
+        {
+
+            method: "POST",
+
+            body: formData
+
+        }
+    );
+
+    fileInput.value = "";
+
+    loadMessages();
+
+};
 function getInitials(name, phone) {
   const source = (name || phone || "WA").trim();
   const parts = source.split(/\s+/).filter(Boolean);
@@ -239,7 +318,9 @@ function renderChatList(options = {}) {
       const isActive = conversation.phone === selectedPhone ? " active" : "";
       // const preview = conversation.lastMessage?.message || "";
       const last = conversation.lastMessage;
+const showTime = last && !last.is_placeholder;
 
+const timeText = showTime ? formatTime(last.created_at) : "";
       let preview = last?.message || "";
 
       const mediaType = getMediaType(last?.mime_type);
@@ -249,13 +330,15 @@ function renderChatList(options = {}) {
       }
 
       //console.log(conversation.phone, conversation.unread_count);
+      //<time class="chat-time">${escapeHtml(formatTime(conversation.lastMessage?.created_at))}</time>
+
       return `
         <button class="chat-item${isActive}" type="button" data-phone="${escapeHtml(conversation.phone)}">
           <div class="avatar">${escapeHtml(getInitials(conversation.name, conversation.phone))}</div>
           <div>
             <div class="chat-name-row">
               <div class="chat-name">${escapeHtml(conversation.name)}</div>
-              <time class="chat-time">${escapeHtml(formatTime(conversation.lastMessage?.created_at))}</time>
+              <time class="chat-time">${showTime ? escapeHtml(timeText) : ""}</time>
             </div>
             <div class="chat-preview-row">
 
@@ -291,6 +374,7 @@ function renderMessages() {
   );
 
   if (!conversation) {
+    messageComposer.classList.remove("show");
     chatHeader.innerHTML = `
       <div class="avatar">WA</div>
       <div>
@@ -350,7 +434,7 @@ function renderMessages() {
   clearBtn?.addEventListener("click", async () => {
     if (!confirm("Clear chat?")) return;
 
-    console.log("Clear Btn Clicked", selectedPhone);
+    // console.log("Clear Btn Clicked", selectedPhone);
 
     const response = await fetch(
       `/api/messages/clear/${selectedPhone}`,
@@ -361,7 +445,7 @@ function renderMessages() {
 
     const result = await response.json();
 
-    console.log(result);
+    // console.log(result);
 
     await loadMessages();
   });
@@ -381,11 +465,29 @@ function renderMessages() {
     );
 
     selectedPhone = null;
-
+    messageComposer.classList.remove("show");
     await loadMessages();
   });
 
-  messageList.innerHTML = conversation.messages
+  messageComposer.classList.add("show");
+
+  const realMessages = conversation.messages.filter(
+  (message) => !message.is_placeholder
+);
+
+if (realMessages.length === 0) {
+  // messageList.innerHTML = `
+  //   <div class="empty-state">
+  //     <i class="fa-regular fa-comments no-select-contact"></i>
+  //     <h2>No messages</h2>
+  //     <p>This chat has been cleared.</p>
+  //   </div>
+  // `;
+  messageList.innerHTML = "";
+  return;
+}
+
+  messageList.innerHTML = realMessages //conversation.messages
     .map(
       (message) => `
       <div class="message-row ${escapeHtml(message.direction || "incoming")}">

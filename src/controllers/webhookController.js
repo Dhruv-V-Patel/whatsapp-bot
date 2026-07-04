@@ -17,19 +17,7 @@ exports.handleMessage = async (req, res) => {
       "Customer";
 
     const lead = await whatsappService.findLead(phone);
-
-    // const text = message.text?.body || "";
-
-    // if (text) {
-    //   await pool.query(
-    //     `
-    //     INSERT INTO whatsapp_messages
-    //     (phone, name, message, direction)
-    //     VALUES ($1, $2, $3, 'incoming')
-    //     `,
-    //     [phone, name, text],
-    //   );
-    // }\
+    const isFirstMessage = !lead;
 
     const messageType = message.type;
 
@@ -102,11 +90,12 @@ exports.handleMessage = async (req, res) => {
       file_name,
       mime_type,
       payload,
-      direction
+      direction,
+    is_first_message
   )
   VALUES
   (
-      $1,$2,$3,$4,$5,$6,$7,$8,'incoming'
+      $1,$2,$3,$4,$5,$6,$7,$8,'incoming', $9
   ) 
       RETURNING *
   `,
@@ -119,6 +108,7 @@ exports.handleMessage = async (req, res) => {
         fileName,
         mimeType,
         JSON.stringify(message),
+        isFirstMessage,
       ],
     );
 
@@ -141,17 +131,17 @@ exports.handleMessage = async (req, res) => {
     console.log(`    Message: ${text}`);
 
     if (currentLead && !currentLead.welcome_sent) {
-      //await whatsappService.sendWelcome(phone);
+      await whatsappService.sendWelcome(phone);
       console.log(`[${phone}] ✓ Welcome message sent`);
 
       await delay(1000);
 
-      //await whatsappService.sendBrochure(phone);
+      await whatsappService.sendBrochure(phone);
       console.log(`[${phone}] ✓ Brochure sent`);
 
       await delay(2000);
 
-      //await whatsappService.sendCustomeMessage(phone);
+      await whatsappService.sendCustomeMessage(phone);
       console.log(`[${phone}] ✓ Custom message sent`);
 
       await pool.query(

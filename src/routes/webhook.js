@@ -24,7 +24,7 @@ router.get("/", (req, res) => {
   ) {
     return res.status(200).send(challenge);
   }
-	console.log("webhook verified");
+	console.log("[OK] WEBHOOK VERIFIED");
   return res.sendStatus(403);
 });
 

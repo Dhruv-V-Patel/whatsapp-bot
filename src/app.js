@@ -7,10 +7,16 @@ const webhookRoute = require("./routes/webhook");
 const messagesRoute = require("./routes/messages");
 
 const app = express();
+const startUploadCleanup = require("./utils/cleanupUploads");
+
+startUploadCleanup();
 
 app.use(express.static(path.join(__dirname, "../public")));
 app.use(express.json());
-
+app.use(
+  "/uploads",
+  express.static(path.join(process.cwd(), "public", "uploads"))
+);
 app.use("/webhook/whatsapp", webhookRoute);
 app.use("/api/messages", messagesRoute);
 
