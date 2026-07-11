@@ -1,5 +1,7 @@
 const { Pool } = require("pg");
+const { types } = require("pg");
 
+types.setTypeParser(1114,(value) => value);
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -24,19 +26,27 @@ async function initializeDatabase() {
         brochure_sent BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW(),
+        unread_count INTEGER DEFAULT 0,
         last_message_at TIMESTAMP DEFAULT NOW()
-      )
+      );
     `);
 
     await client.query(`
-      CREATE TABLE IF NOT EXISTS whatsapp_messages (
+     CREATE TABLE IF NOT EXISTS whatsapp_messages (
         id SERIAL PRIMARY KEY,
         phone VARCHAR(32) NOT NULL,
         name VARCHAR(255),
         message TEXT,
         direction VARCHAR(16) DEFAULT 'incoming',
+        message_type VARCHAR(50),
+        media_id TEXT,
+        media_url TEXT,
+        file_name TEXT,
+        mime_type TEXT,
+        payload JSONB,
+        is_first_message BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT NOW()
-      )
+      );
     `);
 
     await client.query(`

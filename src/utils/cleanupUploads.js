@@ -10,7 +10,7 @@ const UPLOAD_ROOT = path.join(
   "whatsapp"
 );
 
-const MAX_AGE_DAYS = 0.5; //30;
+const MAX_AGE_DAYS = 60; //30;
 
 const getAllFiles = (dir) => {
   let files = [];
@@ -99,8 +99,8 @@ const cleanupUploads = async () => {
 
 // Every day at 2:00 AM
 const startCleanupJob = () => {
-  //cron.schedule("0 2 * * *", cleanupUploads);
-  cron.schedule("* 2 * * *", cleanupUploads);
+  cron.schedule("0 2 * * *", cleanupUploads);
+  //cron.schedule("* * * * *", cleanupUploads);
 
   console.log("🕑 Upload cleanup scheduled (2:00 AM daily)");
 };

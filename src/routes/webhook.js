@@ -16,15 +16,14 @@ router.get("/", (req, res) => {
 
   const challenge =
     req.query["hub.challenge"];
-
   if (
     mode === "subscribe" &&
     token ===
       process.env.WA_VERIFY_TOKEN
   ) {
+	console.log("[OK] WEBHOOK VERIFIED");
     return res.status(200).send(challenge);
   }
-	console.log("[OK] WEBHOOK VERIFIED");
   return res.sendStatus(403);
 });
 

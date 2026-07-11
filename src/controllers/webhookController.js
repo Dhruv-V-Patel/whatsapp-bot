@@ -25,59 +25,77 @@ exports.handleMessage = async (req, res) => {
     let mediaId = null;
     let fileName = null;
     let mimeType = null;
+    let mediaUrl = null;
 
     switch (messageType) {
-      case "text":
-        text = message.text?.body || "";
-        break;
+  case "text":
+    text = message.text?.body || "";
+    break;
 
-      case "image":
-        mediaId = message.image?.id;
-        text = message.image?.caption || "";
-        mimeType = message.image?.mime_type;
-        break;
+  case "image":
+    mediaId = message.image?.id;
+    mimeType = message.image?.mime_type;
+    text = message.image?.caption || "";
+    fileName = `IMG-${mediaId}`;
+    break;
 
-      case "document":
-        mediaId = message.document?.id;
-        fileName = message.document?.filename;
-        mimeType = message.document?.mime_type;
-        break;
+  case "document":
+    mediaId = message.document?.id;
+    mimeType = message.document?.mime_type;
+    fileName = message.document?.filename || `DOC-${mediaId}`;
+    text = message.document?.caption || "";
+    break;
 
-      case "video":
-        mediaId = message.video?.id;
-        text = message.video?.caption || "";
-        mimeType = message.video?.mime_type;
-        break;
+  case "video":
+    mediaId = message.video?.id;
+    mimeType = message.video?.mime_type;
+    text = message.video?.caption || "";
+    fileName = `VID-${mediaId}`;
+    break;
 
-      case "audio":
-        mediaId = message.audio?.id;
-        mimeType = message.audio?.mime_type;
-        break;
+  case "audio":
+    mediaId = message.audio?.id;
+    mimeType = message.audio?.mime_type;
+    fileName = `AUD-${mediaId}`;
+    break;
 
-      case "sticker":
-        mediaId = message.sticker?.id;
-        break;
+  case "sticker":
+    mediaId = message.sticker?.id;
+    mimeType = message.sticker?.mime_type;
+    fileName = `sticker-${mediaId}`;
+    break;
 
-      case "location":
-        text = JSON.stringify(message.location);
-        break;
+  case "location":
+    text = JSON.stringify(message.location);
+    break;
 
-      case "contacts":
-        text = JSON.stringify(message.contacts);
-        break;
+  case "contacts":
+    text = JSON.stringify(message.contacts);
+    break;
 
-      case "button":
-        text = message.button?.text;
-        break;
+  case "button":
+    text = message.button?.text || "";
+    break;
 
-      case "interactive":
-        text = JSON.stringify(message.interactive);
-        break;
+  case "interactive":
+    text = JSON.stringify(message.interactive);
+    break;
 
-      default:
-        text = JSON.stringify(message);
-    }
+  default:
+    text = JSON.stringify(message);
+}
 
+    if (mediaId) {
+  try {
+    mediaUrl = await whatsappService.downloadIncomingMedia(
+      mediaId,
+      mimeType,
+      fileName
+    );
+  } catch (err) {
+    console.error("Failed to download media:", err.message);
+  }
+}
     const result = await pool.query(
       `
   INSERT INTO whatsapp_messages
@@ -87,15 +105,16 @@ exports.handleMessage = async (req, res) => {
       message_type,
       message,
       media_id,
+      media_url,
       file_name,
       mime_type,
       payload,
       direction,
-    is_first_message
+      is_first_message
   )
   VALUES
   (
-      $1,$2,$3,$4,$5,$6,$7,$8,'incoming', $9
+     $1,$2,$3,$4,$5,$6,$7,$8,$9,'incoming',$10
   ) 
       RETURNING *
   `,
@@ -105,6 +124,7 @@ exports.handleMessage = async (req, res) => {
         messageType,
         text,
         mediaId,
+        mediaUrl,
         fileName,
         mimeType,
         JSON.stringify(message),

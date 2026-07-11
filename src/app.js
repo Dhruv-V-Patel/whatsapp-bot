@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const path = require("path");
-
+const fs = require("fs");
 const webhookRoute = require("./routes/webhook");
 const messagesRoute = require("./routes/messages");
 
@@ -20,10 +20,15 @@ app.use(
 app.use("/webhook/whatsapp", webhookRoute);
 app.use("/api/messages", messagesRoute);
 
-app.get("/:page", (req, res) => {
-  res.sendFile(
-    path.join(__dirname, "../public", `${req.params.page}.html`),
-  );
+
+app.get("/:page", (req, res, next) => {
+  const filePath = path.join(__dirname, "../public", `${req.params.page}.html`);
+
+  if (!fs.existsSync(filePath)) {
+    return next();
+  }
+
+  res.sendFile(filePath);
 });
 
 

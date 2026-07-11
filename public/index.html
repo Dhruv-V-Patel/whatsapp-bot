@@ -5,9 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp Messages</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+
+    <!-- Android -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">
+
+    <!-- Apple -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <!-- PWA -->
+    <link rel="manifest" href="/site.webmanifest">
+
     <link rel="stylesheet" href="/app.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <base target="_blank">
 </head>
 
 <body>
@@ -64,11 +78,66 @@
                 </button>
             </header>
 
-            <div class="messages" id="messageList">
-                <div class="empty-state">
-                    <h2>No chat selected</h2>
-                    <p>Choose a contact from the left to view their WhatsApp messages.</p>
+            <div class="messages">
+                <!-- Normal Messages -->
+                <div id="messageList">
+                    <div class="empty-state">
+                        <h2>No chat selected</h2>
+                        <p>Choose a contact from the left to view their WhatsApp messages.</p>
+                    </div>
                 </div>
+
+                <!-- File Preview -->
+                <div id="filePreview" class="file-preview hidden">
+
+                    <div class="preview-top">
+                        <button id="closePreview">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+
+                        <div id="previewFileName"></div>
+                    </div>
+
+                    <div class="preview-header">
+
+                        <div class="preview-document">
+
+                            <i class="fa-regular fa-file"></i>
+
+                            <div class="preview-title">
+                                No preview available
+                            </div>
+
+                            <div id="previewFileSize"></div>
+
+                        </div>
+
+                    </div>
+                    <div class="attachment-footer">
+
+                        <div class="attachment-caption">
+                            <input id="captionInput" type="text" placeholder="Type a message">
+
+                            <button class="emoji-btn">
+                                <i class="fa-regular fa-face-smile"></i>
+                            </button>
+                        </div>
+
+                        <div class="attachment-actions">
+
+                            <div class="attachment-files" id="attachmentFiles">
+                            </div>
+
+                            <button id="attachmentSendBtn" class="attachment-send">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
             </div>
 
             <div class="message-composer" id="messageComposer">
@@ -77,13 +146,14 @@
                     <i class="fa-solid fa-plus"></i>
                 </button>
 
-                <input id="messageInput" type="text" placeholder="Type a message">
+                <!-- <input id="messageInput" type="text" placeholder="Type a message"> -->
+                <textarea id="messageInput" placeholder="Type a message" rows="1"></textarea>
 
                 <button id="sendBtn" class="composer-icon send">
                     <i class="fa-solid fa-paper-plane"></i>
                 </button>
 
-                <input type="file" id="fileInput" hidden>
+                <input type="file" id="fileInput" multiple hidden>
 
             </div>
 

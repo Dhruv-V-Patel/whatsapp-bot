@@ -6,9 +6,19 @@ const searchBox = document.querySelector(".search-box");
 const clearSearchButton = document.querySelector("#clearSearchButton");
 const refreshButton = document.querySelector("#refreshButton");
 const messageComposer = document.getElementById("messageComposer");
+const filePreview = document.getElementById("filePreview");
+const previewFileName = document.getElementById("previewFileName");
+const previewFileSize = document.getElementById("previewFileSize");
+const removeFileBtn = document.getElementById("closePreview");
+const thumbIcon = document.getElementById("attachmentThumbIcon");
+const attachmentSendBtn = document.getElementById("attachmentSendBtn");
+const captionInput = document.getElementById("captionInput");
+const attachmentFiles = document.getElementById("attachmentFiles");
+const messageInput = document.getElementById("messageInput");
 
 let conversations = [];
 let selectedPhone = null;
+let selectedFiles = [];
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -22,81 +32,285 @@ const attachBtn = document.getElementById("attachBtn");
 const fileInput = document.getElementById("fileInput");
 
 attachBtn.onclick = () => {
-    fileInput.click();
+  fileInput.click();
+};
+
+messageInput.addEventListener("keydown", (e) => {
+  // Enter = Send
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById("sendBtn").click();
+    return;
+  }
+});
+
+
+const BASE_HEIGHT = 58;
+
+messageInput.addEventListener("input", () => {
+    // Resize textarea
+    messageInput.style.height = "0px";
+
+    const newHeight = Math.min(messageInput.scrollHeight, 140);
+    messageInput.style.height = newHeight + "px";
+
+    // Resize composer with textarea
+    messageComposer.style.height = Math.max(BASE_HEIGHT, newHeight + 24) + "px";
+
+    // Keep icons centered for one line, bottom aligned for multiple lines
+  if (newHeight <= 40) {
+    messageComposer.style.alignItems = "center";
+  } else {
+    messageComposer.style.alignItems = "flex-end";
+  }
+});
+
+const getAttachmentIcon = (mime) => {
+  if (!mime) return "fa-file";
+
+  if (mime.startsWith("image/")) return "fa-image";
+
+  if (mime.startsWith("video/")) return "fa-video";
+
+  if (mime.startsWith("audio/")) return "fa-music";
+
+  if (mime.includes("pdf")) return "fa-file-pdf";
+
+  if (mime.includes("word") || mime.includes("msword")) return "fa-file-word";
+
+  if (mime.includes("excel") || mime.includes("spreadsheet"))
+    return "fa-file-excel";
+
+  if (mime.includes("csv") || fileName.toLowerCase().endsWith(".csv"))
+    return "fa-file-csv";
+
+  if (mime.includes("powerpoint") || mime.includes("presentation"))
+    return "fa-file-powerpoint";
+
+  if (mime.includes("zip") || mime.includes("rar")) return "fa-file-zipper";
+
+  if (mime.startsWith("text/")) return "fa-file-lines";
+
+  return "fa-file";
+};
+
+const closeFilePreview = () => {
+  selectedFiles = [];
+  fileInput.value = "";
+  captionInput.value = "";
+  attachmentFiles.innerHTML = "";
+
+  previewFileName.textContent = "";
+  previewFileSize.textContent = "";
+
+  filePreview.classList.add("hidden");
+  messageList.style.display = "block";
 };
 
 document.getElementById("sendBtn").onclick = async () => {
+  const message = messageInput.value.trim();
 
-    const message = messageInput.value.trim();
+  if (!message || !selectedPhone) return;
 
-    if (!message || !selectedPhone)
-        return;
+  try {
+    const res = await fetch("/api/messages/send", {
+      method: "POST",
 
-    try {
+      headers: {
+        "Content-Type": "application/json",
+      },
 
-        const res = await fetch("/api/messages/send", {
+      body: JSON.stringify({
+        phone: selectedPhone,
+        message,
+      }),
+    });
 
-            method: "POST",
+    if (!res.ok) throw new Error();
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+    messageInput.value = "";
 
-            body: JSON.stringify({
-                phone: selectedPhone,
-                message
-            })
+    // Reset textarea
+messageInput.style.height = "24px";
 
-        });
+// Reset composer
+messageComposer.style.height = BASE_HEIGHT + "px";
+messageComposer.style.alignItems = "center";
 
-        if (!res.ok)
-            throw new Error();
-
-        messageInput.value = "";
-        // loadMessages();
-
-    } catch {
-
-        alert("Failed to send message.");
-
-    }
-
+// Optional: keep cursor
+    // loadMessages();
+  } catch {
+    alert("Failed to send message.");
+  }
 };
 
-fileInput.onchange = async () => {
+attachmentSendBtn.onclick = async () => {
+  if (!selectedPhone || !selectedFiles.length === 0) return;
 
-    if (!fileInput.files.length)
-        return;
+  try {
+    attachmentSendBtn.disabled = true;
 
-    const formData =
-        new FormData();
+    const formData = new FormData();
 
-    formData.append(
-        "file",
-        fileInput.files[0]
-    );
+    // formData.append("file", selectedFile);
+    selectedFiles.forEach((file) => {
+      formData.append("files", file);
+    });
 
-    formData.append(
-        "phone",
-        selectedPhone
-    );
+    document.getElementById("addMoreFileBtn").onclick = () => fileInput.click();
+    formData.append("phone", selectedPhone);
+    formData.append("caption", captionInput.value.trim());
 
-    await fetch(
-        "/api/messages/send-file",
-        {
+    const res = await fetch("/api/messages/send-file", {
+      method: "POST",
+      body: formData,
+    });
 
-            method: "POST",
+    if (!res.ok) throw new Error();
 
-            body: formData
-
-        }
-    );
-
+    selectedFiles = [];
     fileInput.value = "";
+    captionInput.value = "";
 
-    loadMessages();
+    filePreview.classList.add("hidden");
+    messageList.style.display = "block";
+    messageComposer.classList.add("show");
 
+    await loadMessages();
+  } catch (err) {
+    alert("Failed to send file.");
+  } finally {
+    attachmentSendBtn.disabled = false;
+  }
 };
+
+fileInput.onchange = () => {
+  if (!fileInput.files.length) return;
+
+  const newFiles = Array.from(fileInput.files);
+
+  // Prevent duplicates
+  newFiles.forEach((file) => {
+    const exists = selectedFiles.some(
+      (f) =>
+        f.name === file.name &&
+        f.size === file.size &&
+        f.lastModified === file.lastModified,
+    );
+
+    if (!exists) {
+      selectedFiles.push(file);
+    }
+  });
+
+  renderSelectedFiles();
+
+  messageList.style.display = "none";
+  filePreview.classList.remove("hidden");
+  messageComposer.classList.remove("show");
+
+  fileInput.value = "";
+};
+
+removeFileBtn.onclick = () => {
+  selectedFiles = [];
+  attachmentFiles.innerHTML = "";
+  fileInput.value = "";
+  captionInput.value = "";
+
+  renderSelectedFiles();
+  filePreview.classList.add("hidden");
+  messageList.style.display = "block";
+  messageComposer.classList.add("show");
+};
+
+const renderSelectedFiles = () => {
+  if (selectedFiles.length === 0) {
+    attachmentFiles.innerHTML = "";
+    previewFileName.textContent = "";
+    previewFileSize.textContent = "";
+
+    filePreview.classList.add("hidden");
+    messageList.style.display = "block";
+    messageComposer.classList.add("show");
+
+    return;
+  }
+
+  attachmentFiles.innerHTML = "";
+
+  selectedFiles.forEach((file, index) => {
+    attachmentFiles.insertAdjacentHTML(
+      "beforeend",
+      `
+            <div class="attachment-thumb">
+                <i class="fa-solid ${getAttachmentIcon(file.type, file.name)}"></i>
+                <div class="attachment-name" title="${file.name}">
+                    ${file.name}
+                </div>
+                <button
+                  class="remove-file"
+                  data-index="${index}"
+                  type="button"
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            `,
+    );
+  });
+  // Always show Add More button
+  attachmentFiles.insertAdjacentHTML(
+    "beforeend",
+    `
+        <button
+            id="addMoreFileBtn"
+            class="attachment-add"
+            type="button">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+        `,
+  );
+
+  document.getElementById("addMoreFileBtn").onclick = () => fileInput.click();
+  if (selectedFiles.length === 1) {
+    previewFileName.textContent = selectedFiles[0].name;
+  } else {
+    previewFileName.textContent = `${selectedFiles[0].name} +${selectedFiles.length - 1} more`;
+  }
+
+  const total = selectedFiles.reduce((s, f) => s + f.size, 0);
+
+  previewFileSize.textContent = `${(total / 1024).toFixed(1)} KB`;
+};
+
+attachmentFiles.addEventListener("click", (e) => {
+  const btn = e.target.closest(".remove-file");
+
+  if (!btn) return;
+
+  selectedFiles.splice(Number(btn.dataset.index), 1);
+
+  // If no files left, restore normal chat view
+  if (selectedFiles.length === 0) {
+    attachmentFiles.innerHTML = "";
+    fileInput.value = "";
+    captionInput.value = "";
+    previewFileName.textContent = "";
+    previewFileSize.textContent = "";
+
+    filePreview.classList.add("hidden");
+    messageList.style.display = "block";
+    messageComposer.classList.add("show");
+
+    // Scroll back to latest message
+    messageList.scrollTop = messageList.scrollHeight;
+
+    return;
+  }
+  renderSelectedFiles();
+});
+
 function getInitials(name, phone) {
   const source = (name || phone || "WA").trim();
   const parts = source.split(/\s+/).filter(Boolean);
@@ -160,6 +374,12 @@ function formatTime(value) {
     year: "numeric",
   });
 }
+
+const formatMessage = (text = "") =>
+  escapeHtml(text)
+    .split(/\r?\n/)
+    .map(line => line.trimStart())
+    .join("<br>");
 
 function groupMessages(messages) {
   const map = new Map();
@@ -274,32 +494,107 @@ const renderMessageContent = (message) => {
   const type = getMediaType(message.mime_type);
 
   if (type === "text") {
+    //${escapeHtml(message.message || "")}
     return `
       <div class="message-text">
-        ${escapeHtml(message.message || "")}
+         ${formatMessage(message.message)}
       </div>
     `;
   }
+  //<i class="fa-solid ${getMediaIcon(getMediaType(message.mime_type))}"></i>
+  if (type !== "text") {
+    return `
+<div class="message-placeholder">
 
-  return `
-    <div class="message-placeholder">
-      <div class="message-placeholder-icon">
-        <i class="fa-solid ${getMediaIcon(type)}"></i>
-      </div>
+  <div class="message-placeholder-icon">
+    <i class="fa-solid ${getMediaIcon(type)}"></i>
+  </div>
 
-      <div class="message-placeholder-content">
-        <div class="message-placeholder-title">
-          ${getMediaLabel(type)}
-        </div>
-
-        <div class="message-placeholder-subtitle">
-          Preview Not Available
-        </div>
-      </div>
+  <div class="message-placeholder-content">
+    <div class="message-placeholder-title">
+      ${escapeHtml(message.file_name || "Document")}
     </div>
+  </div>
+
+</div>
+
+${
+  message.message?.trim()
+    ? `
+      <div class="message-caption">
+        ${escapeHtml(message.message)}
+      </div>
+    `
+    : ""
+}
+
+${
+  message.media_url
+    ? `
+      <div class="button-option">
+
+        <a
+          href="${escapeHtml(message.media_url)}"
+          download
+          class="downloadDocument"
+        >
+          <i class="fa-solid fa-download"></i>
+          <span>Download</span>
+        </a>
+
+        <a
+          href="${escapeHtml(message.media_url)}"
+          target="_blank"
+          class="openDocument"
+        >
+          <i class="fa-solid fa-up-right-from-square"></i>
+          <span>Open</span>
+        </a>
+
+      </div>
+    `
+    : ""
+}
   `;
+  }
 };
 
+const getChatPreview = (last) => {
+  if (!last) return "";
+
+  const mediaType = getMediaType(last.mime_type);
+
+  switch (mediaType) {
+    case "text":
+      return escapeHtml(last.message || "");
+
+    case "image":
+      return `<i class="fa-regular fa-image"></i> Photo`;
+
+    case "video":
+      return `<i class="fa-solid fa-video"></i> Video`;
+
+    case "audio":
+      return `<i class="fa-solid fa-microphone"></i> Audio`;
+
+    case "document":
+      return `<i class="fa-regular fa-file-lines"></i> ${escapeHtml(
+        last.file_name || "Document"
+      )}`;
+
+    case "location":
+      return `<i class="fa-solid fa-location-dot"></i> Location`;
+
+    case "contacts":
+      return `<i class="fa-regular fa-address-book"></i> Contact`;
+
+    case "sticker":
+      return `<i class="fa-regular fa-face-smile"></i> Sticker`;
+
+    default:
+      return escapeHtml(last.message || "");
+  }
+};
 function renderChatList(options = {}) {
   const filtered = getFilteredConversations();
 
@@ -318,20 +613,23 @@ function renderChatList(options = {}) {
       const isActive = conversation.phone === selectedPhone ? " active" : "";
       // const preview = conversation.lastMessage?.message || "";
       const last = conversation.lastMessage;
-const showTime = last && !last.is_placeholder;
+      const showTime = last && !last.is_placeholder;
 
-const timeText = showTime ? formatTime(last.created_at) : "";
-      let preview = last?.message || "";
+      const timeText = showTime ? formatTime(last.created_at) : "";
+      
+      // let preview = last?.message || "";
 
-      const mediaType = getMediaType(last?.mime_type);
+      // const mediaType = getMediaType(last?.mime_type);
 
-      if (mediaType !== "text") {
-        preview = `${getMediaLabel(mediaType)} Preview Not Available`;
-      }
+      // if (mediaType !== "text") {
+      //   preview = `${getMediaLabel(mediaType)} Preview Not Available`;
+      // }
 
+      const preview = getChatPreview(last);
+      
       //console.log(conversation.phone, conversation.unread_count);
       //<time class="chat-time">${escapeHtml(formatTime(conversation.lastMessage?.created_at))}</time>
-
+      // ${escapeHtml(preview)}
       return `
         <button class="chat-item${isActive}" type="button" data-phone="${escapeHtml(conversation.phone)}">
           <div class="avatar">${escapeHtml(getInitials(conversation.name, conversation.phone))}</div>
@@ -342,21 +640,21 @@ const timeText = showTime ? formatTime(last.created_at) : "";
             </div>
             <div class="chat-preview-row">
 
-  <div class="chat-preview">
-    ${escapeHtml(preview)}
-  </div>
+                <div class="chat-preview">
+                  ${preview}
+                </div>
 
-  ${
-    conversation.unread_count > 0
-      ? `
-      <span class="unread-badge">
-        ${conversation.unread_count}
-      </span>
-      `
-      : ""
-  }
+                ${
+                  conversation.unread_count > 0
+                    ? `
+                    <span class="unread-badge">
+                      ${conversation.unread_count}
+                    </span>
+                    `
+                    : ""
+                }
 
-</div>
+              </div>
           </div>
         </button>
       `;
@@ -368,6 +666,28 @@ const timeText = showTime ? formatTime(last.created_at) : "";
   }
 }
 
+const formatDateDivider = (value) => {
+  const date = new Date(value);
+  const now = new Date();
+
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startMsg = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const diffDays = Math.floor(
+    (startToday - startMsg) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) {
+    return date.toLocaleDateString("en-IN", {
+      weekday: "long",
+    });
+  }
+
+  return date.toLocaleDateString("en-GB");
+};
+
 function renderMessages() {
   const conversation = conversations.find(
     (item) => item.phone === selectedPhone,
@@ -375,6 +695,7 @@ function renderMessages() {
 
   if (!conversation) {
     messageComposer.classList.remove("show");
+
     chatHeader.innerHTML = `
       <div class="avatar">WA</div>
       <div>
@@ -382,9 +703,10 @@ function renderMessages() {
         <p>Choose a contact to start viewing messages</p>
       </div>
     `;
+
     messageList.innerHTML = `
       <div class="empty-state">
-      <i class="fa-brands fa-whatsapp no-select-contact"></i>
+        <i class="fa-brands fa-whatsapp no-select-contact"></i>
         <h2>WhatsApp Messages</h2>
         <p>Select a contact from the left sidebar.</p>
       </div>
@@ -393,30 +715,37 @@ function renderMessages() {
   }
 
   chatHeader.innerHTML = `
-    <div class="avatar">${escapeHtml(getInitials(conversation.name, conversation.phone))}</div>
+    <div class="avatar">${escapeHtml(
+      getInitials(conversation.name, conversation.phone),
+    )}</div>
+
     <div>
       <h2>${escapeHtml(conversation.name)}</h2>
       <p>${escapeHtml(conversation.phone)}</p>
     </div>
-      <div class="chat-menu-wrapper">
-    <button class="chat-menu-btn" id="chatMenuBtn">
-      <i class="fa-solid fa-ellipsis-vertical"></i>
-    </button>
 
-    <div class="chat-dropdown" id="chatDropdown">
-      <button id="clearChatBtn">
-        <i class="fa-solid fa-broom"></i>
-        Clear Chat
+    <div class="chat-menu-wrapper">
+
+      <button class="chat-menu-btn" id="chatMenuBtn">
+        <i class="fa-solid fa-ellipsis-vertical"></i>
       </button>
 
-      <button id="deleteContactBtn">
-        <i class="fa-solid fa-trash"></i>
-        Delete Contact
-      </button>
+      <div class="chat-dropdown" id="chatDropdown">
+
+        <button id="clearChatBtn">
+          <i class="fa-solid fa-broom"></i>
+          Clear Chat
+        </button>
+
+        <button id="deleteContactBtn">
+          <i class="fa-solid fa-trash"></i>
+          Delete Contact
+        </button>
+
+      </div>
+
     </div>
-  </div>
   `;
-
   const menuBtn = document.getElementById("chatMenuBtn");
   const dropdown = document.getElementById("chatDropdown");
 
@@ -436,12 +765,9 @@ function renderMessages() {
 
     // console.log("Clear Btn Clicked", selectedPhone);
 
-    const response = await fetch(
-      `/api/messages/clear/${selectedPhone}`,
-      {
-        method: "DELETE",
-      }
-    );
+    const response = await fetch(`/api/messages/clear/${selectedPhone}`, {
+      method: "DELETE",
+    });
 
     const result = await response.json();
 
@@ -457,49 +783,72 @@ function renderMessages() {
 
     console.log("Delete Btn Clicked", selectedPhone);
 
-    await fetch(
-      `/api/messages/contact/${selectedPhone}`,
-      {
-        method: "DELETE",
-      }
-    );
+    await fetch(`/api/messages/contact/${selectedPhone}`, {
+      method: "DELETE",
+    });
 
     selectedPhone = null;
     messageComposer.classList.remove("show");
     await loadMessages();
   });
-
+  
   messageComposer.classList.add("show");
 
   const realMessages = conversation.messages.filter(
-  (message) => !message.is_placeholder
-);
+    (m) => !m.is_placeholder,
+  );
 
-if (realMessages.length === 0) {
-  // messageList.innerHTML = `
-  //   <div class="empty-state">
-  //     <i class="fa-regular fa-comments no-select-contact"></i>
-  //     <h2>No messages</h2>
-  //     <p>This chat has been cleared.</p>
-  //   </div>
-  // `;
-  messageList.innerHTML = "";
-  return;
-}
+  if (!realMessages.length) {
+    messageList.innerHTML = "";
+    return;
+  }
 
-  messageList.innerHTML = realMessages //conversation.messages
-    .map(
-      (message) => `
-      <div class="message-row ${escapeHtml(message.direction || "incoming")}">
+  let html = "";
+  let lastDivider = "";
+
+  realMessages.forEach((message) => {
+
+    const divider = formatDateDivider(message.created_at);
+
+    if (divider !== lastDivider) {
+
+      lastDivider = divider;
+
+      html += `
+        <div
+          class="date-divider"
+          data-label="${divider}">
+          <span>${divider}</span>
+        </div>
+      `;
+    }
+
+    html += `
+      <div class="message-row ${escapeHtml(
+        message.direction || "incoming",
+      )}">
+
         <article class="message-bubble">
-          ${renderMessageContent(message)}
-          <time class="message-time">${escapeHtml(formatTime(message.created_at))}</time>
-        </article>
-      </div>
-    `,
-    )
-    .join("");
 
+          ${renderMessageContent(message)}
+
+          <time class="message-time">
+            ${new Date(message.created_at)
+              .toLocaleTimeString("en-IN", {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              })
+              .toLowerCase()}
+          </time>
+
+        </article>
+
+      </div>
+    `;
+  });
+
+  messageList.innerHTML = html;
   messageList.scrollTop = messageList.scrollHeight;
 }
 
@@ -530,6 +879,10 @@ async function loadMessages() {
     console.error(error);
   }
 }
+refreshButton.addEventListener("click", async () => {
+  closeFilePreview();
+  await loadMessages();
+});
 
 chatList.addEventListener("click", async (event) => {
   const item = event.target.closest(".chat-item");
@@ -562,8 +915,6 @@ clearSearchButton.addEventListener("click", () => {
   searchInput.focus();
 });
 
-refreshButton.addEventListener("click", loadMessages);
-
 loadMessages();
 // setInterval(loadMessages, 2000);
 
@@ -587,12 +938,9 @@ document.getElementById("mobileBackBtn")?.addEventListener("click", () => {
 //======================== Update the Incomeing Message Without need refresh ===============================
 const socket = io();
 
-socket.on("connect", () => {
- 
-});
+socket.on("connect", () => {});
 
 socket.on("new-message", (msg) => {
-
   // reload chat automatically
   loadMessages();
 });

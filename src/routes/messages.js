@@ -4,58 +4,6 @@ const whatsappService = require("../services/whatsappService");
 const router = express.Router();
 const upload = require("../middleware/upload");
 
-// WITH message_rows AS (
-//   SELECT
-//     m.id,
-//     m.phone,
-//     COALESCE(m.name, l.name, 'Customer') AS name,
-//     m.message,
-//     m.mime_type,
-//     m.media_id,
-//     m.media_url,
-//     COALESCE(l.unread_count, 0) AS unread_count,
-//     COALESCE(m.direction, 'incoming') AS direction,
-//     m.created_at
-//   FROM whatsapp_messages m
-//   LEFT JOIN whatsapp_leads l ON l.phone = m.phone
-// ),
-
-// lead_rows AS (
-//   SELECT
-//     l.id,
-//     l.phone,
-//     COALESCE(l.name, 'Customer') AS name,
-//     l.first_message AS message,
-
-//     NULL::text AS mime_type,
-//     NULL::text AS media_id,
-//     NULL::text AS media_url,
-//     COALESCE(l.unread_count, 0) AS unread_count,
-
-//     'incoming' AS direction,
-//     COALESCE(l.created_at, l.last_message_at, NOW()) AS created_at
-
-//   FROM whatsapp_leads l
-//   WHERE l.first_message IS NOT NULL
-//     AND l.first_message <> ''
-//     AND NOT EXISTS (
-//       SELECT 1
-//       FROM whatsapp_messages m
-//       WHERE m.phone = l.phone
-//     )
-// )
-
-// SELECT *
-// FROM message_rows
-
-// UNION ALL
-
-// SELECT *
-// FROM lead_rows
-
-// ORDER BY created_at DESC
-// LIMIT 200;
-
 router.get("/", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -67,6 +15,7 @@ router.get("/", async (req, res) => {
         m.message,
         m.mime_type,
         m.media_id,
+        m.file_name,
         m.media_url,
         COALESCE(l.unread_count, 0) AS unread_count,
         COALESCE(m.direction, 'incoming') AS direction,
@@ -88,6 +37,7 @@ lead_rows AS (
 
         NULL::text AS mime_type,
         NULL::text AS media_id,
+        NULL::text AS file_name,
         NULL::text AS media_url,
 
         COALESCE(l.unread_count, 0) AS unread_count,
@@ -138,34 +88,65 @@ router.get("/logs", async (req, res) => {
     //  CASE WHEN l.welcome_sent THEN 'Sent' ELSE 'Not Sent' END AS welcome_sent,
     // CASE WHEN l.brochure_sent THEN 'Sent' ELSE 'Not Sent' END AS brochure_sent,
     //COALESCE(l.status, 'New Lead') AS status
+// SELECT
+//     m.name,
+//     m.phone,
+//     m.message,
+//     m.created_at,
+//     l.created_at AS lead_created_at,
 
+//    CASE
+//     WHEN m.is_first_message THEN 'Sent'
+//     ELSE 'Already Sent'
+// END AS welcome_sent,
+
+// CASE
+//     WHEN m.is_first_message THEN 'Sent'
+//     ELSE 'Already Sent'
+// END AS brochure_sent,
+
+// CASE
+//     WHEN m.is_first_message THEN 'New Lead'
+//     ELSE 'Repeated'
+// END AS status
+
+//   FROM whatsapp_messages m
+//   LEFT JOIN whatsapp_leads l ON l.phone = m.phone
+//   WHERE m.direction = 'incoming'
+//   ORDER BY m.created_at DESC
     const result = await pool.query(`
   SELECT
     m.name,
     m.phone,
     m.message,
+    m.message_type,
+    m.file_name,
+    m.mime_type,
     m.created_at,
     l.created_at AS lead_created_at,
 
-   CASE
-    WHEN m.is_first_message THEN 'Sent'
-    ELSE 'Already Sent'
-END AS welcome_sent,
+    CASE
+        WHEN m.is_first_message THEN 'Sent'
+        ELSE 'Already Sent'
+    END AS welcome_sent,
 
-CASE
-    WHEN m.is_first_message THEN 'Sent'
-    ELSE 'Already Sent'
-END AS brochure_sent,
+    CASE
+        WHEN m.is_first_message THEN 'Sent'
+        ELSE 'Already Sent'
+    END AS brochure_sent,
 
-CASE
-    WHEN m.is_first_message THEN 'New Lead'
-    ELSE 'Repeated'
-END AS status
+    CASE
+        WHEN m.is_first_message THEN 'New Lead'
+        ELSE 'Repeated'
+    END AS status
 
-  FROM whatsapp_messages m
-  LEFT JOIN whatsapp_leads l ON l.phone = m.phone
-  WHERE m.direction = 'incoming'
-  ORDER BY m.created_at DESC
+FROM whatsapp_messages m
+LEFT JOIN whatsapp_leads l
+    ON l.phone = m.phone
+
+WHERE m.direction = 'incoming'
+
+ORDER BY m.created_at DESC;
 `);
     res.json(result.rows);
   } catch (err) {
@@ -308,24 +289,92 @@ router.post("/send", async (req, res) => {
 
 router.post(
   "/send-file",
-  upload.single("file"),
+  upload.array("files", 30),
   async (req, res) => {
+    try {
+      const { phone, caption = "" } = req.body;
+      const files = req.files || [];
+      
+      files.forEach(file => {
+        file.originalname = Buffer.from(
+          file.originalname,
+          "latin1"
+        ).toString("utf8");
+      });
+      
+      if (!phone) {
+        return res.status(400).json({
+          success: false,
+          message: "Phone is required",
+        });
+      }
 
-     console.log(req.file);
-    const savedMessage =
-      await whatsappService.sendFileMessage(
-        req.body.phone,
-        req.file
-      );
+      if (files.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "No files uploaded",
+        });
+      }
 
-    const io = req.app.get("io");
+      const io = req.app.get("io");
 
-    io?.emit("new-message", savedMessage);
+      const results = [];
 
-    res.json({
-      success: true
-    });
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
 
+        try {
+          const savedMessage =
+            await whatsappService.sendFileMessage(
+              phone,
+              file,
+              i === 0 ? caption : ""
+            );
+
+          results.push({
+            file: file.originalname,
+            success: true,
+            message: savedMessage,
+          });
+
+          io?.emit("new-message", savedMessage);
+
+        } catch (err) {
+
+          console.error(
+            `Failed to send ${file.originalname}`,
+            err.response?.data || err.message
+          );
+
+          results.push({
+            file: file.originalname,
+            success: false,
+            error: err.response?.data || err.message,
+          });
+        }
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      const failedCount = results.length - successCount;
+
+      return res.status(successCount > 0 ? 200 : 500).json({
+        success: failedCount === 0,
+        total: results.length,
+        sent: successCount,
+        failed: failedCount,
+        results,
+      });
+
+    } catch (err) {
+
+      console.error(err);
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to process uploaded files",
+        error: err.message,
+      });
+    }
   }
 );
 

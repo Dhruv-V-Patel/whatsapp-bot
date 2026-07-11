@@ -209,6 +209,39 @@ function toggleMsg(el) {
   el.textContent = txt.classList.contains('expanded') ? 'Show less' : 'Read more';
 }
 
+const getMessagePreview = (row) => {
+  if (row.message?.trim()) {
+    return esc(row.message);
+  }
+
+  const fileName = esc(row.file_name || "");
+
+  switch (row.message_type) {
+    case "image":
+      return `<i class="fa-regular fa-image"></i> ${fileName || "Image"}`;
+
+    case "video":
+      return `<i class="fa-solid fa-video"></i> ${fileName || "Video"}`;
+
+    case "audio":
+      return `<i class="fa-solid fa-microphone"></i> ${fileName || "Audio"}`;
+
+    case "document":
+      return `<i class="fa-regular fa-file-lines"></i> ${fileName || "Document"}`;
+
+    case "sticker":
+      return `<i class="fa-regular fa-face-smile"></i> ${fileName || "Sticker"}`;
+
+    case "location":
+      return `<i class="fa-solid fa-location-dot"></i> Location`;
+
+    case "contacts":
+      return `<i class="fa-regular fa-address-book"></i> Contact`;
+
+    default:
+      return "";
+  }
+};
 // ── Render Table ──
 function renderTable() {
   const start = (currentPage - 1) * rowsPerPage;
@@ -240,11 +273,12 @@ function renderTable() {
     const id = String(row.id || row.phone);
     const welcome = row.status === 'Repeated' ? 'Already Sent' : (row.welcome_sent || 'Not Sent');
     const brochure = row.status === 'Repeated' ? 'Already Sent' : (row.brochure_sent || 'Not Sent');
-    const long = row.message && row.message.length > 60;
+    const preview = getMessagePreview(row);
+    const long = row.message && row.message.length > 60 && row.message_type === "text";      //<td class="message-cell"><div class="message-text" id="msg-${start+i}">${esc(row.message)}</div>
     return `<tr>
       <td><i class="fa-solid fa-user" style="color:var(--muted);margin-right:6px"></i>${esc(row.name||'Customer')}</td>
       <td><i class="fa-solid fa-phone" style="color:var(--muted);margin-right:6px"></i>${esc(row.phone)}</td>
-      <td class="message-cell"><div class="message-text" id="msg-${start+i}">${esc(row.message)}</div>${long?`<span class="read-more" onclick="toggleMsg(this)">Read more</span>`:''}</td>
+      <td class="message-cell"><div class="message-text" id="msg-${start+i}">${preview}</div>${long?`<span class="read-more" onclick="toggleMsg(this)">Read more</span>`:''}</td>
       <td><i class="fa-regular fa-clock" style="color:var(--muted);margin-right:6px"></i>${formatDate(row.created_at)}</td>
       <td>${badge(welcome, 'welcome')}</td>
       <td>${badge(brochure, 'brochure')}</td>
@@ -270,7 +304,7 @@ function renderCards() {
     const brochure = row.status === 'Repeated' ? 'Already Sent' : (row.brochure_sent || 'Not Sent');
     return `<div class="lead-card">
       <div class="card-header"><div><div class="card-name"><i class="fa-solid fa-user" style="color:var(--primary)"></i> ${esc(row.name||'Customer')}</div><div class="card-phone"><i class="fa-solid fa-phone"></i> ${esc(row.phone)}</div></div>${leadBadge(row.status)}</div>
-      <div class="card-body"><div class="card-message">${esc(row.message)}</div><div class="card-time"><i class="fa-regular fa-clock"></i> ${formatDate(row.created_at)}</div></div>
+      <div class="card-body"><div class="card-message">${getMessagePreview(row)}</div><div class="card-time"><i class="fa-regular fa-clock"></i> ${formatDate(row.created_at)}</div></div>
       <div class="card-footer"><div class="card-status"><span><i class="fa-solid fa-paper-plane" style="color:var(--primary)"></i> ${welcome}</span><span><i class="fa-solid fa-file-pdf" style="color:var(--danger)"></i> ${brochure}</span></div></div>
     </div>`;
   }).join('');
@@ -300,6 +334,27 @@ function formatDate(iso) {
   const d = new Date(iso);
   return d.toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true });
 }
+
+// function formatDate(iso) {
+//   if (!iso) return "";
+
+//   const date = new Date(iso);
+
+//   const parts = new Intl.DateTimeFormat("en-IN", {
+//     timeZone: "Asia/Kolkata",
+//     day: "2-digit",
+//     month: "short",
+//     year: "numeric",
+//     hour: "numeric",
+//     minute: "2-digit",
+//     hour12: true,
+//   }).formatToParts(date);
+
+//   const get = (type) =>
+//     parts.find((p) => p.type === type)?.value || "";
+
+//   return `${get("day")} ${get("month")} ${get("year")}, ${get("hour")}:${get("minute")} ${get("dayPeriod").toLowerCase()}`;
+// };
 
 // ── Clear Filters ──
 // function clearAllFilters() {
