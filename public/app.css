@@ -39,10 +39,11 @@
   --success: #51cf66;
   --warning: #ffd43b;
   --danger: #ff6b6b;
-  --chat-bg: #202121; /*#121212;*/
+  --chat-bg: #161717; /* rgba(255, 255, 255, .1);/* #202121; /*#121212;*/
   --msg-bg: #242626;
   --incoming: rgba(255, 255, 255, 0.06);
-  --outgoing: rgba(77, 171, 247, 0.2);
+  /* --outgoing: rgba(77, 171, 247, 0.2); */
+  --outgoing: rgb(20, 42, 77);
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   --bg: #121212;
   --card: #1e1e1e;
@@ -84,6 +85,20 @@
     background-clip: content-box;
 }
 
+[data-theme="dark"] .chat-panel::before{
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: url("/chat-bg-pattern.svg") repeat;
+    background-size: 540px 960px;
+
+    filter: invert(1);
+    opacity: .05; 
+
+    pointer-events: none;
+    z-index: 0;
+}
 /* ===========================
    Dark Theme - File Preview
 =========================== */
@@ -707,6 +722,27 @@ h1 {
   scrollbar-width: thin;
   position: relative;
   flex: 1;
+}
+
+.chat-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: var(--chat-bg) url("/chat-bg-pattern.svg") repeat;
+  background-size: 540px 960px;
+
+  z-index: 0;
+  opacity: .05;
+}
+
+.messages,
+ .chat-header,
+.message-composer,
+.file-preview {
+  position: relative;
+  z-index: 1;
+  /* background: transparent; */
 }
 
 #messageList {

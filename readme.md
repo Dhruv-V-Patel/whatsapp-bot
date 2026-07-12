@@ -8,6 +8,8 @@ A Node.js and Express WhatsApp webhook bot for capturing incoming WhatsApp leads
 - Saves lead phone number, name, and first message in PostgreSQL.
 - Sends automated welcome messages.
 - Sends a brochure document link.
+- Sends automated project loacation message.
+- Also sends manual message and document.
 - Updates lead activity timestamps after repeat messages.
 - Serves static files from the `public` folder.
 
@@ -16,7 +18,19 @@ A Node.js and Express WhatsApp webhook bot for capturing incoming WhatsApp leads
 ```text
 .
 |-- public/
+|   |--uploads/
+|   |  |--whatsapp/
+|   |     |--audio/
+|   |     |--document/
+|   |     |--image/
+|   |     |--video/
 |   |-- index.html
+|   |-- app.css
+|   |-- app.js
+|   |-- favicon.ico
+|   |-- messagelogs.html
+|   |-- messagelogs.js
+|   |-- messagelogs.css
 |   `-- someshwar.pdf
 |-- src/
 |   |-- app.js
@@ -24,13 +38,18 @@ A Node.js and Express WhatsApp webhook bot for capturing incoming WhatsApp leads
 |   |   `-- webhookController.js
 |   |-- db/
 |   |   `-- postgres.js
+|   |-- middleware/
+|   |   `-- upload.js
 |   |-- routes/
 |   |   `-- webhook.js
+|   |   `-- messages.js
 |   |-- services/
 |   |   `-- whatsappService.js
-|   `-- utils/
+|   |-- utils/
 |       `-- delay.js
+|       `-- cleanupUploads.js
 |-- server.js
+|-- .env
 |-- package.json
 `-- requirement.txt
 ```

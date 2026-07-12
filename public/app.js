@@ -15,6 +15,7 @@ const attachmentSendBtn = document.getElementById("attachmentSendBtn");
 const captionInput = document.getElementById("captionInput");
 const attachmentFiles = document.getElementById("attachmentFiles");
 const messageInput = document.getElementById("messageInput");
+const messagesContainer = document.querySelector(".messages");
 
 let conversations = [];
 let selectedPhone = null;
@@ -886,7 +887,11 @@ function renderMessages() {
   });
 
   messageList.innerHTML = html;
-  messageList.scrollTop = messageList.scrollHeight;
+  
+// Wait until browser finishes rendering
+requestAnimationFrame(() => {
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+});
 }
 
 async function loadMessages() {
