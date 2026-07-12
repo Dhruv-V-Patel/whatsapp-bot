@@ -28,74 +28,74 @@ exports.handleMessage = async (req, res) => {
     let mediaUrl = null;
 
     switch (messageType) {
-  case "text":
-    text = message.text?.body || "";
-    break;
+      case "text":
+        text = message.text?.body || "";
+        break;
 
-  case "image":
-    mediaId = message.image?.id;
-    mimeType = message.image?.mime_type;
-    text = message.image?.caption || "";
-    fileName = `IMG-${mediaId}`;
-    break;
+      case "image":
+        mediaId = message.image?.id;
+        mimeType = message.image?.mime_type;
+        text = message.image?.caption || "";
+        fileName = `IMG-${mediaId}`;
+        break;
 
-  case "document":
-    mediaId = message.document?.id;
-    mimeType = message.document?.mime_type;
-    fileName = message.document?.filename || `DOC-${mediaId}`;
-    text = message.document?.caption || "";
-    break;
+      case "document":
+        mediaId = message.document?.id;
+        mimeType = message.document?.mime_type;
+        fileName = message.document?.filename || `DOC-${mediaId}`;
+        text = message.document?.caption || "";
+        break;
 
-  case "video":
-    mediaId = message.video?.id;
-    mimeType = message.video?.mime_type;
-    text = message.video?.caption || "";
-    fileName = `VID-${mediaId}`;
-    break;
+      case "video":
+        mediaId = message.video?.id;
+        mimeType = message.video?.mime_type;
+        text = message.video?.caption || "";
+        fileName = `VID-${mediaId}`;
+        break;
 
-  case "audio":
-    mediaId = message.audio?.id;
-    mimeType = message.audio?.mime_type;
-    fileName = `AUD-${mediaId}`;
-    break;
+      case "audio":
+        mediaId = message.audio?.id;
+        mimeType = message.audio?.mime_type;
+        fileName = `AUD-${mediaId}`;
+        break;
 
-  case "sticker":
-    mediaId = message.sticker?.id;
-    mimeType = message.sticker?.mime_type;
-    fileName = `sticker-${mediaId}`;
-    break;
+      case "sticker":
+        mediaId = message.sticker?.id;
+        mimeType = message.sticker?.mime_type;
+        fileName = `sticker-${mediaId}`;
+        break;
 
-  case "location":
-    text = JSON.stringify(message.location);
-    break;
+      case "location":
+        text = JSON.stringify(message.location);
+        break;
 
-  case "contacts":
-    text = JSON.stringify(message.contacts);
-    break;
+      case "contacts":
+        text = JSON.stringify(message.contacts);
+        break;
 
-  case "button":
-    text = message.button?.text || "";
-    break;
+      case "button":
+        text = message.button?.text || "";
+        break;
 
-  case "interactive":
-    text = JSON.stringify(message.interactive);
-    break;
+      case "interactive":
+        text = JSON.stringify(message.interactive);
+        break;
 
-  default:
-    text = JSON.stringify(message);
-}
+      default:
+        text = JSON.stringify(message);
+    }
 
     if (mediaId) {
-  try {
-    mediaUrl = await whatsappService.downloadIncomingMedia(
-      mediaId,
-      mimeType,
-      fileName
-    );
-  } catch (err) {
-    console.error("Failed to download media:", err.message);
-  }
-}
+      try {
+        mediaUrl = await whatsappService.downloadIncomingMedia(
+          mediaId,
+          mimeType,
+          fileName,
+        );
+      } catch (err) {
+        console.error("Failed to download media:", err.message);
+      }
+    }
     const result = await pool.query(
       `
   INSERT INTO whatsapp_messages
@@ -143,14 +143,30 @@ exports.handleMessage = async (req, res) => {
     if (!lead) {
       await whatsappService.saveLead(phone, name, text);
     }
-    const currentLead = await whatsappService.findLead(phone);
+    // const currentLead = await whatsappService.findLead(phone);
 
     console.log("====== Contact Details ==========");
     console.log(`    Name: ${name}`);
     console.log(`    Phone: ${phone}`);
     console.log(`    Message: ${text}`);
 
-    if (currentLead && !currentLead.welcome_sent) {
+    const { rowCount } = await pool.query(
+      `
+  UPDATE whatsapp_leads
+  SET
+      welcome_sent = true,
+      brochure_sent = true,
+      status = 'New Lead',
+      updated_at = NOW(),
+      unread_count = COALESCE(unread_count, 0) + 1,
+      last_message_at = NOW()
+  WHERE phone = $1
+    AND welcome_sent = false
+  `,
+      [phone],
+    );
+    if (rowCount === 1) {
+      //if (currentLead && !currentLead.welcome_sent) {
       await whatsappService.sendWelcome(phone);
       console.log(`[${phone}] ✓ Welcome message sent`);
 
@@ -164,20 +180,20 @@ exports.handleMessage = async (req, res) => {
       await whatsappService.sendCustomeMessage(phone);
       console.log(`[${phone}] ✓ Custom message sent`);
 
-      await pool.query(
-        `
-        UPDATE whatsapp_leads
-        SET
-          welcome_sent = true,
-          brochure_sent = true,
-          status = 'New Lead',
-          updated_at = NOW(),
-          unread_count = COALESCE(unread_count, 0) + 1,
-          last_message_at = NOW()
-        WHERE phone = $1
-        `,
-        [phone],
-      );
+      // await pool.query(
+      //   `
+      //   UPDATE whatsapp_leads
+      //   SET
+      //     welcome_sent = true,
+      //     brochure_sent = true,
+      //     status = 'New Lead',
+      //     updated_at = NOW(),
+      //     unread_count = COALESCE(unread_count, 0) + 1,
+      //     last_message_at = NOW()
+      //   WHERE phone = $1
+      //   `,
+      //   [phone],
+      // );
     } else {
       console.log(
         `[${phone}] Lead already exists. Welcome message already sent.`,

@@ -92,6 +92,7 @@ class WhatsAppService {
         to: phone,
         type: "text",
         text: {
+          preview_url: true,
           body: `🏡 સોમેશ્વર ગાર્ડન સિટી, મહેસાણા માં આપનું હાર્દિક સ્વાગત છે!
 
 30+ વર્ષના વિશ્વાસ અને ગુણવત્તાની પરંપરા ધરાવતા Someshwar Group દ્વારા પ્રસ્તુત પ્રીમિયમ રહેણાંક પ્રોજેક્ટ.
@@ -105,9 +106,6 @@ class WhatsAppService {
 🛡️ 24×7 સુરક્ષા
 🛍️ સોમેશ્વર આર્કેડ કોમર્શિયલ સ્પેસ
 🚗 વિશાળ પાર્કિંગ વ્યવસ્થા
-
-📍 ધારા વિદ્યાલય સામે, ટી.બી. રોડ, મહેસાણા
-visit site: https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6
 
 📞 +91 98257 14677
 📞 +91 98250 15196
@@ -143,9 +141,6 @@ visit site: https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6
 🛍️ સોમેશ્વર આર્કેડ કોમર્શિયલ સ્પેસ
 🚗 વિશાળ પાર્કિંગ વ્યવસ્થા
 
-📍 ધારા વિદ્યાલય સામે, ટી.બી. રોડ, મહેસાણા
-visit site: https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6
-
 📞 +91 98257 14677
 📞 +91 98250 15196
 
@@ -168,6 +163,7 @@ visit site: https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6
         to: phone,
         type: "text",
         text: {
+          preview_url: true,
           body: `सोमेश्वर गार्डन सिटी, मेहसाणा में आपका हार्दिक स्वागत है! 🙏
 
 30+ वर्षों के विश्वास और गुणवत्ता के साथ Someshwar Group प्रस्तुत करता है —
@@ -181,9 +177,6 @@ visit site: https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6
 🛡️ 24×7 सुरक्षा
 🛍️ सोमेश्वर आर्केड कमर्शियल स्पेस
 🚗 विशाल पार्किंग सुविधा
-
-📍 धारा विद्यालय के सामने, टी. बी. रोड, मेहसाणा
-visit site: https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6
 
 📞 +91 98257 14677
 📞 +91 98250 15196
@@ -220,9 +213,6 @@ visit site: https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6
 🛍️ सोमेश्वर आर्केड कमर्शियल स्पेस
 🚗 विशाल पार्किंग सुविधा
 
-📍 धारा विद्यालय के सामने, टी. बी. रोड, मेहसाणा
-visit site: https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6
-
 📞 +91 98257 14677
 📞 +91 98250 15196
 
@@ -232,6 +222,50 @@ visit site: https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6
 
 ✨ अपने सपनों का घर आज ही बुक करें।`,
         payload: responseHi.data,
+      });
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Location
+    const responseLocation = await axios.post(
+      `https://graph.facebook.com/v25.0/${process.env.PHONE_NUMBER_ID}/messages`,
+      {
+        messaging_product: "whatsapp",
+        to: phone,
+        type: "text",
+        text: {
+          preview_url: true,
+          body: `📍 Prime Location – Someshwar Garden City
+
+અમારો પ્રોજેક્ટ ધારા વિદ્યાલય સામે, T.B. રોડ, મહેસાણા ખાતે પ્રાઇમ લોકેશન પર આવેલો છે, જ્યાંથી શહેરની તમામ જરૂરી સુવિધાઓ સરળતાથી ઉપલબ્ધ છે.
+
+हमारा प्रोजेक्ट मेहसाणा में T.B. रोड पर धारा विद्यालय के ठीक सामने एक बेहतरीन लोकेशन पर स्थित है, जहाँ से शहर की सभी ज़रूरी सुविधाओं तक आसानी से पहुँचा जा सकता है।
+
+🗺️ Click here to view the location on Google Maps:
+https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6`,
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+        },
+      },
+    );
+
+    if (responseLocation.status === 200 && responseLocation.data?.messages?.[0]?.id) {
+      await this.saveOutgoingMessage({
+        phone,
+        messageType: "text",
+        message: `📍 Prime Location – Someshwar Garden City
+
+અમારો પ્રોજેક્ટ ધારા વિદ્યાલય સામે, T.B. રોડ, મહેસાણા ખાતે પ્રાઇમ લોકેશન પર આવેલો છે, જ્યાંથી શહેરની તમામ જરૂરી સુવિધાઓ સરળતાથી ઉપલબ્ધ છે.
+
+हमारा प्रोजेक्ट मेहसाणा में T.B. रोड पर धारा विद्यालय के ठीक सामने एक बेहतरीन लोकेशन पर स्थित है, जहाँ से शहर की सभी ज़रूरी सुविधाओं तक आसानी से पहुँचा जा सकता है।
+
+🗺️ Click here to view the location on Google Maps:
+https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6`,
+        payload: responseLocation.data,
       });
     }
   }

@@ -11,15 +11,19 @@
   --success: #28a745;
   --warning: #ffc107;
   --danger: #dc3545;
-  --chat-bg: #f8f9fa;
+  --chat-bg:#F5F1EB;
+  --msg-bg: #FFFFFF;/* #f8f9fa;*/
   --incoming: rgba(0, 0, 0, 0.04);
-  --outgoing: rgba(0, 123, 255, 0.12);
+  --outgoing: rgb(210, 242, 252);
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   --bg: #f8f9fa;
   --card: #ffffff;
   --muted: #6c757d;
   --light: #f8f9fa;
   --dark: #343a40;
+  --link-color: #22b861;
+  --link-hover-color: #0f8540;
+
 }
 
 [data-theme="dark"] {
@@ -35,7 +39,8 @@
   --success: #51cf66;
   --warning: #ffd43b;
   --danger: #ff6b6b;
-  --chat-bg: #121212;
+  --chat-bg: #202121; /*#121212;*/
+  --msg-bg: #242626;
   --incoming: rgba(255, 255, 255, 0.06);
   --outgoing: rgba(77, 171, 247, 0.2);
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -44,6 +49,8 @@
   --muted: #adb5bd;
   --light: #212529;
   --dark: #f8f9fa;
+  --link-color: #3bec82;
+  --link-hover-color: #4df091;
 }
 
 [data-theme="dark"] .message-composer {
@@ -57,6 +64,24 @@
 
 [data-theme="dark"] .composer-icon:hover {
   background: rgba(255, 255, 255, .08);
+}
+/* ===========================
+   Dark Theme -  Message Input
+=========================== */
+
+[data-theme="dark"] #messageInput, [data-theme="dark"] .messages, [data-theme="dark"] .chat-list {
+    scrollbar-color: #474949 transparent;
+}
+
+[data-theme="dark"] #messageInput::-webkit-scrollbar-thumb {
+    background: #6f6f6f;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+[data-theme="dark"] #messageInput::-webkit-scrollbar-thumb:hover {
+    background: #8a8a8a;
+    background-clip: content-box;
 }
 
 /* ===========================
@@ -506,7 +531,8 @@ h1 {
   min-height: 0;
   overflow-x: hidden;
   overflow-y: scroll;
-  scrollbar-color: var(--accent-dark) transparent;
+  /* scrollbar-color: var(--accent-dark) transparent; */
+  scrollbar-color: #e0dede transparent;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
 }
@@ -579,7 +605,7 @@ h1 {
 
 .sidebar-footer a {
   display: inline-block;
-  color: var(--accent);
+  color: var(--accent-dark);
   font-weight: 700;
   text-decoration: none;
 }
@@ -676,7 +702,8 @@ h1 {
   gap: 10px;
   overflow-y: auto;
   padding: 36px clamp(24px, 5vw, 90px);
-  scrollbar-color: var(--accent-dark) transparent;
+  /* scrollbar-color: var(--accent-dark) transparent; */
+  scrollbar-color: #e0dede transparent;
   scrollbar-width: thin;
   position: relative;
   flex: 1;
@@ -737,7 +764,7 @@ h1 {
   padding: 12px 15px 5px;
   border-radius: 7px;
   border: 1px solid var(--border);
-  background: var(--chat-bg);
+  background: var(--msg-bg);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
 }
 
@@ -758,6 +785,17 @@ h1 {
   word-break: break-word;
 }
 
+.message-link {
+    color: var(--link-color);
+    text-decoration: underline;
+    word-break: break-word;
+}
+
+.message-link:hover {
+    /* color: #06e463; */
+    color: var(--link-hover-color);
+    text-decoration: none;
+}
 .message-time {
   margin-top: 3px;
   color: var(--text-secondary);
@@ -766,7 +804,6 @@ h1 {
   display: flex;
   justify-content: flex-end;
 }
-
 
 .empty-state,
 .error-state {
@@ -1104,10 +1141,37 @@ h1 {
     margin:0;
 
     display: block;
+    scrollbar-width: thin;
+    scrollbar-color: #cccccc transparent;
 }
 
 #messageInput::placeholder {
   color: var(--text-secondary);
+}
+/* Chrome / Edge / Safari */
+#messageInput::-webkit-scrollbar {
+    width: 8px;
+}
+
+#messageInput::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 8px 0;
+}
+
+#messageInput::-webkit-scrollbar-thumb {
+    background: #9b9b9b;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+#messageInput::-webkit-scrollbar-thumb:hover {
+    background: #7d7d7d;
+    background-clip: content-box;
+}
+
+#messageInput::-webkit-scrollbar-corner {
+    background: transparent;
 }
 
 .composer-icon {
@@ -1177,27 +1241,19 @@ h1 {
 }
 
 #sendBtn {
-
   right: 26px;
-
-  background: #25D366;
-
+  background: #21C063;
   color: white;
-
+  margin-left: 5px
 }
 
-#sendBtn:hover {
-
+/* #sendBtn:hover {
   background: #20ba5a;
-
-  /* transform: translateY(-50%) scale(0.5);  */
-
-}
+  transform: translateY(-50%) scale(0.5); 
+} */
 
 #sendBtn i {
-
   font-size: 17px;
-
 }
 
 /* ===========================

@@ -54,6 +54,11 @@ messageInput.addEventListener("input", () => {
     const newHeight = Math.min(messageInput.scrollHeight, 140);
     messageInput.style.height = newHeight + "px";
 
+     if (messageInput.scrollHeight > 140) {
+        messageInput.style.overflowY = "auto";
+      } else {
+        messageInput.style.overflowY = "hidden";
+      }
     // Resize composer with textarea
     messageComposer.style.height = Math.max(BASE_HEIGHT, newHeight + 24) + "px";
 
@@ -131,7 +136,9 @@ document.getElementById("sendBtn").onclick = async () => {
     messageInput.value = "";
 
     // Reset textarea
-messageInput.style.height = "24px";
+    messageInput.style.height = "24px";
+    messageInput.style.overflowY = "hidden";
+    // messageInput.scrollTop = 0;
 
 // Reset composer
 messageComposer.style.height = BASE_HEIGHT + "px";
@@ -375,11 +382,41 @@ function formatTime(value) {
   });
 }
 
-const formatMessage = (text = "") =>
-  escapeHtml(text)
-    .split(/\r?\n/)
-    .map(line => line.trimStart())
-    .join("<br>");
+// const formatMessage = (text = "") =>
+//   escapeHtml(text)
+//     .split(/\r?\n/)
+//     .map(line => line.trimStart())
+//     .join("<br>");
+
+// const linkify = (text = "") => {
+//   return escapeHtml(text).replace(
+//     /\b((?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s<]*)?)/gi,
+//     (match) => {
+//       const href = /^https?:\/\//i.test(match)
+//         ? match
+//         : `https://${match}`;
+
+//       return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="message-link">${match}</a>`;
+//     }
+//   );
+// };
+
+const linkify = (text = "") => {
+  return escapeHtml(text).replace(
+    /\b((?:https?:\/\/|www\.)[^\s<]+|(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?:\/[^\s<]*)?)/gi,
+    (url) => {
+      const href = /^https?:\/\//i.test(url)
+        ? url
+        : `https://${url}`;
+
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="message-link">${url}</a>`;
+    }
+  );
+};
+
+const formatMessage = (text = "") => {
+  return linkify(text).replace(/\n/g, "<br>");
+};
 
 function groupMessages(messages) {
   const map = new Map();
@@ -497,7 +534,7 @@ const renderMessageContent = (message) => {
     //${escapeHtml(message.message || "")}
     return `
       <div class="message-text">
-         ${formatMessage(message.message)}
+         ${formatMessage(message.message || "")}
       </div>
     `;
   }
@@ -522,7 +559,7 @@ ${
   message.message?.trim()
     ? `
       <div class="message-caption">
-        ${escapeHtml(message.message)}
+         ${formatMessage(message.message || "")}
       </div>
     `
     : ""
