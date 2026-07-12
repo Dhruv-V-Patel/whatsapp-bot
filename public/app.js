@@ -16,10 +16,31 @@ const captionInput = document.getElementById("captionInput");
 const attachmentFiles = document.getElementById("attachmentFiles");
 const messageInput = document.getElementById("messageInput");
 const messagesContainer = document.querySelector(".messages");
+const unsupportedModal = document.getElementById("unsupportedModal");
+const unsupportedFilesDiv = document.getElementById("unsupportedFiles");
+
 
 let conversations = [];
 let selectedPhone = null;
 let selectedFiles = [];
+
+
+document
+  .getElementById("closeUnsupportedModal")
+  .addEventListener("click", () => {
+    unsupportedModal.classList.add("hidden");
+  });
+
+const showUnsupportedFiles = (files) => {
+  unsupportedFilesDiv.innerHTML = `
+    <p>The following files are not supported by WhatsApp:</p>
+    <ul>
+      ${files.map(file => `<li>${file}</li>`).join("")}
+    </ul>
+  `;
+
+  unsupportedModal.classList.remove("hidden");
+};
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -71,7 +92,7 @@ messageInput.addEventListener("input", () => {
   }
 });
 
-const getAttachmentIcon = (mime) => {
+const getAttachmentIcon = (mime, fileName = "") => {
   if (!mime) return "fa-file";
 
   if (mime.startsWith("image/")) return "fa-image";
@@ -111,6 +132,14 @@ const closeFilePreview = () => {
 
   filePreview.classList.add("hidden");
   messageList.style.display = "block";
+  messageComposer.classList.add("show");
+
+  const messagesContainer = document.querySelector(".messages");
+
+requestAnimationFrame(() => {
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+});
+
 };
 
 document.getElementById("sendBtn").onclick = async () => {
@@ -169,6 +198,9 @@ attachmentSendBtn.onclick = async () => {
     formData.append("phone", selectedPhone);
     formData.append("caption", captionInput.value.trim());
 
+    // Place it here
+    closeFilePreview();
+
     const res = await fetch("/api/messages/send-file", {
       method: "POST",
       body: formData,
@@ -192,10 +224,71 @@ attachmentSendBtn.onclick = async () => {
   }
 };
 
+const SUPPORTED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+
+  "video/mp4",
+  "video/3gpp",
+  "video/mpeg",
+
+  "audio/aac",
+  "audio/mp4",
+  "audio/mpeg",
+  "audio/amr",
+  "audio/ogg",
+  "audio/opus",
+
+  "application/pdf",
+  "text/plain",
+  "application/msword",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
 fileInput.onchange = () => {
   if (!fileInput.files.length) return;
 
-  const newFiles = Array.from(fileInput.files);
+  const unsupported = [];
+
+const validFiles = Array.from(fileInput.files).filter(file => {
+  const ext = file.name.split(".").pop()?.toLowerCase();
+
+  // Fix browsers reporting audio .mpeg as video/mpeg
+  if (
+    file.type === "video/mpeg" &&
+    ["mp3", "mpeg"].includes(ext)
+  ) {
+    return true;
+  }
+
+  if (!SUPPORTED_TYPES.includes(file.type)) {
+    unsupported.push(file.name);
+    return false;
+  }
+
+  return true;
+});
+
+if (unsupported.length) {
+  // alert(
+  //   `These files are not supported by WhatsApp:\n\n${unsupported.join("\n")}`
+  // );
+  showUnsupportedFiles(unsupported);
+}
+
+if (!validFiles.length) {
+  fileInput.value = "";
+  return;
+}
+
+const newFiles = validFiles;
+
+ // const newFiles = Array.from(fileInput.files);
 
   // Prevent duplicates
   newFiles.forEach((file) => {
@@ -230,6 +323,11 @@ removeFileBtn.onclick = () => {
   filePreview.classList.add("hidden");
   messageList.style.display = "block";
   messageComposer.classList.add("show");
+  const messagesContainer = document.querySelector(".messages");
+
+requestAnimationFrame(() => {
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+});
 };
 
 const renderSelectedFiles = () => {
@@ -312,7 +410,13 @@ attachmentFiles.addEventListener("click", (e) => {
     messageComposer.classList.add("show");
 
     // Scroll back to latest message
-    messageList.scrollTop = messageList.scrollHeight;
+    //messageList.scrollTop = messageList.scrollHeight;
+
+    const messagesContainer = document.querySelector(".messages");
+
+requestAnimationFrame(() => {
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+});
 
     return;
   }

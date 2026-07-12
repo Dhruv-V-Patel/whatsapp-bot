@@ -253,7 +253,10 @@ https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6`,
       },
     );
 
-    if (responseLocation.status === 200 && responseLocation.data?.messages?.[0]?.id) {
+    if (
+      responseLocation.status === 200 &&
+      responseLocation.data?.messages?.[0]?.id
+    ) {
       await this.saveOutgoingMessage({
         phone,
         messageType: "text",
@@ -388,9 +391,19 @@ https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6`,
 
     form.append("messaging_product", "whatsapp");
 
+    let contentType = file.mimetype;
+
+    const ext = path.extname(file.originalname || "").toLowerCase() || `.${mime.extension(file.mimetype || "")}` || "";
+
+    if (
+      contentType === "video/mpeg" &&
+      [".mp3", ".mpeg"].includes(ext)
+    ) {
+      contentType = "audio/mpeg";
+    }
     form.append("file", fs.createReadStream(file.path), {
       filename: file.originalname,
-      contentType: file.mimetype,
+      contentType,
     });
 
     const uploadResponse = await axios.post(
@@ -407,15 +420,58 @@ https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6`,
     const mediaId = uploadResponse.data.id;
 
     // Detect WhatsApp media type
-    let type = "document";
+    //let type = "document";
 
-    if (file.mimetype.startsWith("image/")) {
-      type = "image";
-    } else if (file.mimetype.startsWith("video/")) {
-      type = "video";
-    } else if (file.mimetype.startsWith("audio/")) {
-      type = "audio";
-    }
+    // if (file.mimetype.startsWith("image/")) {
+    //   type = "image";
+    // } else if ( file.mimetype.startsWith("audio/") || (file.mimetype === "video/mpeg" && file.originalname.toLowerCase().endsWith(".mpeg"))) {
+    //   type = "audio";
+    // } else if (file.mimetype.startsWith("video/")) {
+    //   type = "video";
+    // }
+
+const IMAGE_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+]);
+
+const VIDEO_EXTENSIONS = new Set([
+  ".mp4",
+  ".3gp",
+]);
+
+const AUDIO_EXTENSIONS = new Set([
+  ".mp3",
+  ".mpeg",
+  ".m4a",
+  ".aac",
+  ".amr",
+  ".ogg",
+  ".opus",
+]);
+
+let type = "document";
+
+if (IMAGE_EXTENSIONS.has(ext)) {
+  type = "image";
+} else if (VIDEO_EXTENSIONS.has(ext)) {
+  type = "video";
+} else if (AUDIO_EXTENSIONS.has(ext)) {
+  type = "audio";
+} else {
+  if (
+    file.mimetype.startsWith("image/") &&
+    file.mimetype !== "image/svg+xml"
+  ) {
+    type = "image";
+  } else if (file.mimetype.startsWith("video/")) {
+    type = "video";
+  } else if (file.mimetype.startsWith("audio/")) {
+    type = "audio";
+  }
+}
 
     const payload = {
       messaging_product: "whatsapp",
@@ -477,124 +533,160 @@ https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6`,
       mediaId,
       mediaUrl,
       fileName: file.originalname,
-      mimeType: file.mimetype,
+      mimeType: contentType || file.mimetype,
       payload: sendResponse.data,
     });
   }
 
+  async downloadIncomingMedia(mediaId, mimeType, fileName = "") {
+    try {
+      // Get WhatsApp download URL
+      const { data } = await axios.get(
+        `https://graph.facebook.com/v25.0/${mediaId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+          },
+        },
+      );
 
-async downloadIncomingMedia(mediaId, mimeType, fileName = "") {
-  try {
-    // Get WhatsApp download URL
-    const { data } = await axios.get(
-      `https://graph.facebook.com/v25.0/${mediaId}`,
-      {
+      // Download media
+      const response = await axios.get(data.url, {
+        responseType: "stream",
         headers: {
           Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
         },
-      },
-    );
+      });
+      // Safe filename
+      const actualMimeType = data.mime_type || mimeType;
 
-    // Download media
-    const response = await axios.get(data.url, {
-      responseType: "stream",
-      headers: {
-        Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
-      },
-    });
+      const ext = path.extname(fileName || "") || mime.extension(actualMimeType || "") || "";
 
-    // Select folder
-    let folder = "document";
+      // Select folder
+      // let folder = "document";
 
-    if (mimeType?.startsWith("image/")) {
-      folder = "image";
-    } else if (mimeType?.startsWith("video/")) {
-      folder = "video";
-    } else if (mimeType?.startsWith("audio/")) {
-      folder = "audio";
-    }
+      // if (mimeType?.startsWith("image/")) {
+      //   folder = "image";
+      // } else if (mimeType?.startsWith("video/")) {
+      //   folder = "video";
+      // } else if (mimeType?.startsWith("audio/")) {
+      //   folder = "audio";
+      // }
 
-    const uploadDir = path.join(
-      process.cwd(),
-      "public",
-      "uploads",
-      "whatsapp",
-      folder,
-    );
+      const IMAGE_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+]);
 
-    fs.mkdirSync(uploadDir, { recursive: true });
+const VIDEO_EXTENSIONS = new Set([
+  ".mp4",
+  ".3gp",
+]);
 
-    // Safe filename
-const actualMimeType = data.mime_type || mimeType;
+const AUDIO_EXTENSIONS = new Set([
+  ".mp3",
+  ".mpeg",
+  ".m4a",
+  ".aac",
+  ".amr",
+  ".ogg",
+  ".opus",
+]);
 
-const ext =
-  path.extname(fileName || "") ||
-  mime.extension(actualMimeType || "") ||
-  "";
+let folder = "document";
 
-const extension = ext ? `.${ext.replace(/^\./, "")}` : "";
-
-// const baseName = fileName
-//   ? path.basename(fileName, path.extname(fileName))
-//   : `${folder}-${mediaId}`;
-
-// const safeName =
-//   `${Date.now()}-${baseName.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")}${extension}`;
-
-const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-
-let prefix = "FILE";
-
-switch (folder) {
-  case "image":
-    prefix = "IMG";
-    break;
-  case "video":
-    prefix = "VID";
-    break;
-  case "audio":
-    prefix = "AUD";
-    break;
-  case "document":
-    prefix = "DOC";
-    break;
-}
-
-const baseName = fileName
-  ? path.basename(fileName, path.extname(fileName))
-  : mediaId;
-
-const safeName =
-  folder === "document" && fileName
-    ? `${prefix}-${today}-${baseName.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")}${extension}`
-    : `${prefix}-${today}-${mediaId}${extension}`;
-
-    const savePath = path.join(uploadDir, safeName);
-
-    // Save file
-    await new Promise((resolve, reject) => {
-      const writer = fs.createWriteStream(savePath);
-
-      response.data.pipe(writer);
-
-      writer.on("finish", resolve);
-      writer.on("error", reject);
-    });
-
-    console.log("Downloaded:", savePath);
-
-    // Return URL for frontend
-    return `/uploads/whatsapp/${folder}/${safeName}`;
-
-  } catch (err) {
-    console.error(
-      "downloadIncomingMedia:",
-      err.response?.data || err.message,
-    );
-
-    return null;
+if (IMAGE_EXTENSIONS.has(ext)) {
+  folder = "image";
+} else if (VIDEO_EXTENSIONS.has(ext)) {
+  folder = "video";
+} else if (AUDIO_EXTENSIONS.has(ext)) {
+  folder = "audio";
+} else {
+  if (
+    mimeType?.startsWith("image/") //&& file.mimetype !== "image/svg+xml"
+  ) {
+    folder = "image";
+  } else if (mimeType?.startsWith("video/")) {
+    folder = "video";
+  } else if (mimeType?.startsWith("audio/")) {
+    folder = "audio";
   }
 }
+      const uploadDir = path.join(
+        process.cwd(),
+        "public",
+        "uploads",
+        "whatsapp",
+        folder,
+      );
+
+      fs.mkdirSync(uploadDir, { recursive: true });
+
+      
+      const extension = ext ? `.${ext.replace(/^\./, "")}` : "";
+
+      // const baseName = fileName
+      //   ? path.basename(fileName, path.extname(fileName))
+      //   : `${folder}-${mediaId}`;
+
+      // const safeName =
+      //   `${Date.now()}-${baseName.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")}${extension}`;
+
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+
+      let prefix = "FILE";
+
+      switch (folder) {
+        case "image":
+          prefix = "IMG";
+          break;
+        case "video":
+          prefix = "VID";
+          break;
+        case "audio":
+          prefix = "AUD";
+          break;
+        case "document":
+          prefix = "DOC";
+          break;
+      }
+
+      const baseName = fileName
+        ? path.basename(fileName, path.extname(fileName))
+        : mediaId;
+
+      const safeName =
+        folder === "document" && fileName
+          ? `${prefix}-${today}-${baseName.replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")}${extension}`
+          : `${prefix}-${today}-${mediaId}${extension}`;
+
+      const savePath = path.join(uploadDir, safeName);
+
+      // Save file
+      await new Promise((resolve, reject) => {
+        const writer = fs.createWriteStream(savePath);
+
+        response.data.pipe(writer);
+
+        writer.on("finish", resolve);
+        writer.on("error", reject);
+      });
+
+      console.log("Downloaded:", savePath);
+
+      // Return URL for frontend
+      return `/uploads/whatsapp/${folder}/${safeName}`;
+    } catch (err) {
+      console.error(
+        "downloadIncomingMedia:",
+        err.response?.data || err.message,
+      );
+
+      return null;
+    }
+  }
 }
 
 module.exports = new WhatsAppService();
