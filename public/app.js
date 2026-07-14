@@ -18,7 +18,11 @@ const messageInput = document.getElementById("messageInput");
 const messagesContainer = document.querySelector(".messages");
 const unsupportedModal = document.getElementById("unsupportedModal");
 const unsupportedFilesDiv = document.getElementById("unsupportedFiles");
-
+const confirmModal = document.getElementById("confirmModal");
+const confirmTitle = document.getElementById("confirmTitle");
+const confirmMessage = document.getElementById("confirmMessage");
+const confirmCancel = document.getElementById("confirmCancel");
+const confirmOk = document.getElementById("confirmOk");
 
 let conversations = [];
 let selectedPhone = null;
@@ -30,6 +34,42 @@ document
   .addEventListener("click", () => {
     unsupportedModal.classList.add("hidden");
   });
+
+const showConfirm = ({
+    title,
+    message,
+    okText = "Delete",
+    cancelText = "Cancel",
+}) => {
+    return new Promise((resolve) => {
+
+        confirmTitle.textContent = title;
+        confirmMessage.textContent = message;
+
+        confirmOk.textContent = okText;
+        confirmCancel.textContent = cancelText;
+
+        confirmModal.classList.remove("hidden");
+
+        const close = (result) => {
+            confirmModal.classList.add("hidden");
+
+            confirmOk.onclick = null;
+            confirmCancel.onclick = null;
+
+            resolve(result);
+        };
+
+        confirmOk.onclick = () => close(true);
+        confirmCancel.onclick = () => close(false);
+
+        confirmModal.onclick = (e) => {
+            if (e.target === confirmModal) {
+                close(false);
+            }
+        };
+    });
+};
 
 const showUnsupportedFiles = (files) => {
   unsupportedFilesDiv.innerHTML = `
@@ -903,9 +943,17 @@ function renderMessages() {
   const clearBtn = document.getElementById("clearChatBtn");
 
   clearBtn?.addEventListener("click", async () => {
-    if (!confirm("Clear chat?")) return;
+    // if (!confirm("Clear chat?")) return;
+    const confirmed = await showConfirm({
+    title: `Clear chat with ${conversation.name}?`,
+    message: "Messages will be removed from Whatsapp Messenger.",
+    okText: "Clear Chat",
+    cancelText: "Cancel",
+});
 
-    // console.log("Clear Btn Clicked", selectedPhone);
+if (!confirmed) return;
+
+    //console.log("Clear Btn Clicked", selectedPhone);
 
     const response = await fetch(`/api/messages/clear/${selectedPhone}`, {
       method: "DELETE",
@@ -921,9 +969,17 @@ function renderMessages() {
   const deleteBtn = document.getElementById("deleteContactBtn");
 
   deleteBtn?.addEventListener("click", async () => {
-    if (!confirm("Delete contact?")) return;
+    // if (!confirm("Delete contact?")) return;
+const confirmed = await showConfirm({
+    title: "Delete contact?",
+    message: "This contact will be deleted from Whatsapp Messenger.",
+    okText: "Delete",
+    cancelText: "Cancel, keep contact",
+});
 
-    console.log("Delete Btn Clicked", selectedPhone);
+if (!confirmed) return;
+
+    //console.log("Delete Btn Clicked", selectedPhone);
 
     await fetch(`/api/messages/contact/${selectedPhone}`, {
       method: "DELETE",

@@ -281,8 +281,8 @@ https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6`,
         to: phone,
         type: "document",
         document: {
-          //link:`https://someshwarai.in/someshwar.pdf`,
-          id: process.env.BROCHURE_MEDIA_ID,
+          link:`https://someshwarai.in/someshwar.pdf`,
+          //id: process.env.BROCHURE_MEDIA_ID,
           filename: "Brochure.pdf",
         },
       },
@@ -292,11 +292,12 @@ https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6`,
         },
       },
     );
+    console.log("Send Brochure Response:",response.data);
     if (response.status === 200 && response.data?.messages?.[0]?.id) {
       await this.saveOutgoingMessage({
         phone,
         messageType: "document",
-        mediaId: process.env.BROCHURE_MEDIA_ID,
+        // mediaId: process.env.BROCHURE_MEDIA_ID,
         fileName: "Brochure.pdf",
         mediaUrl: "/someshwar.pdf",
         mimeType: "application/pdf",

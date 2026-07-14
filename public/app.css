@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 :root {
   --primary: #007bff;
   --secondary: #6c757d;
@@ -395,6 +396,8 @@ input {
   border-bottom: 1px solid var(--border);
   background: var(--light);
   transition: background 0.3s, border-color 0.3s;
+  position: relative;
+  z-index: 100;
 }
 
 .sidebar-header {
@@ -736,15 +739,6 @@ h1 {
   opacity: .05;
 }
 
-.messages,
- .chat-header,
-.message-composer,
-.file-preview {
-  position: relative;
-  z-index: 1;
-  /* background: transparent; */
-}
-
 #messageList {
   width: 100%;
   height: 100%;
@@ -945,7 +939,7 @@ h1 {
 
   display: none;
   overflow: hidden;
-  z-index: 1000;
+  z-index: 9999; /*1000*/
 }
 
 .chat-dropdown.show {
@@ -1128,6 +1122,7 @@ h1 {
 
 .message-composer {
   display: none;
+  position: relative;
 }
 
 .message-composer.show {
@@ -1298,6 +1293,7 @@ h1 {
 
 .file-preview {
   position: absolute;
+  /* position: relative; */
   inset: 0;
 
   display: flex;
@@ -1871,7 +1867,7 @@ h1 {
 
 .message-row.incoming .message-bubble {
     position: relative;
-    border-radius: 8px 16px 16px 16px;
+    border-radius: 8px 10px 10px 10px;
 }
 
 .message-row.incoming .message-bubble::before {
@@ -1889,7 +1885,7 @@ h1 {
 }
 .message-row.outgoing .message-bubble {
     position: relative;
-    border-radius: 16px 8px 16px 16px;
+    border-radius: 10px 8px 10px 10px;
 }
 
 .message-row.outgoing .message-bubble::before {
@@ -1904,4 +1900,112 @@ h1 {
     background: inherit;
 
     clip-path: polygon(0 0, 0 100%, 100% 0);
+}
+/* ==========================
+   WhatsApp Confirm Modal
+========================== */
+.confirm-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(11, 20, 26, .72);
+    backdrop-filter: blur(2px);
+    z-index: 10000;
+    font-family: Roboto Variable, Roboto, Helvetica Neue, Helvetica, sans-serif;
+}
+
+.confirm-modal.hidden {
+    display: none;
+}
+
+.confirm-box {
+    width: 500px;
+    max-width: calc(100vw - 40px);
+
+    background: #202c33;
+    color: #e9edef;
+
+    border-radius: 18px;
+
+    padding: 28px 32px 20px;
+
+    box-shadow: 0 24px 48px rgba(0,0,0,.45);
+    animation: confirmIn .18s ease;
+}
+@keyframes confirmIn {
+    from {
+        opacity: 0;
+        transform: scale(.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+.confirm-box h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.confirm-box p {
+    margin: 20px 0 0;
+    color: #8696a0;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.confirm-actions {
+    margin-top: 50px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+}
+
+.confirm-cancel {
+    border: none;
+    background: transparent;
+    padding: 10px 32px;
+    color: #25d366;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 545;
+    cursor: pointer;
+}
+
+.confirm-delete {
+    border: none;
+
+    padding: 10px 32px;
+
+    border-radius: 999px;
+
+    background: #ff4f5f;
+    color: #111;
+
+    font-size: 15px;
+    font-weight: 545;
+
+    cursor: pointer;
+}
+
+.confirm-delete:hover {
+    background: #ff6573;
+}
+
+.confirm-cancel:hover{
+  background: #269f261b;
+}
+
+[data-theme="light"] .confirm-box {
+    background: #fff;
+    color: #111;
+}
+
+[data-theme="light"] .confirm-box p {
+    color: #666;
 }
