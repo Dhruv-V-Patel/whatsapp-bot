@@ -1,4 +1,5 @@
-const whatsappService = require("../services/whatsappService");
+// const whatsappService = require("../services/whatsappService");
+const whatsappService = require("../services/whatsappServiceNew");
 const delay = require("../utils/delay");
 const pool = require("../db/postgres");
 

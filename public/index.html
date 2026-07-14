@@ -42,9 +42,17 @@
                         <p class="eyebrow">WhatsApp Bot</p>
                         <h1>Messages</h1>
                     </div>
-                    <button class="icon-button" id="refreshButton" type="button" aria-label="Refresh messages">
+                    <!-- <button class="icon-button" id="refreshButton" type="button" aria-label="Refresh messages">
                         <i class="fa-solid fa-arrow-rotate-right fa-icon"></i>
-                    </button>
+                    </button> -->
+                     <div class="header-actions">
+                        <button class="icon-button" id="settingsButton" type="button" aria-label="WhatsApp Configuration">
+                            <i class="fa-solid fa-gear fa-icon"></i>
+                        </button>
+                        <button class="icon-button" id="refreshButton" type="button" aria-label="Refresh messages">
+                            <i class="fa-solid fa-arrow-rotate-right fa-icon"></i>
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -65,8 +73,101 @@
                 </a>
             </footer>
         </aside>
+<!-- <section class="chat-panel">
+            <header class="chat-header" id="chatHeader">
+                <div class="avatar">WA</div>
+                <div>
+                    <h2>Select a chat</h2>
+                    <p>Incoming WhatsApp messages will appear here.</p>
+                </div>
+                <button id="mobileBackBtn" class="icon-button">
+                    <i class="fa-solid fa-arrow-left fa-icon"></i>
+                </button>
+            </header>
 
+            <div class="messages">
+                
+                <div id="messageList">
+                    <div class="empty-state">
+                        <h2>No chat selected</h2>
+                        <p>Choose a contact from the left to view their WhatsApp messages.</p>
+                    </div>
+                </div>
+
+                
+                <div id="filePreview" class="file-preview hidden">
+
+                    <div class="preview-top">
+                        <button id="closePreview">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+
+                        <div id="previewFileName"></div>
+                    </div>
+
+                    <div class="preview-header">
+
+                        <div class="preview-document">
+
+                            <i class="fa-regular fa-file"></i>
+
+                            <div class="preview-title">
+                                No preview available
+                            </div>
+
+                            <div id="previewFileSize"></div>
+
+                        </div>
+
+                    </div>
+                    <div class="attachment-footer">
+
+                        <div class="attachment-caption">
+                            <input id="captionInput" type="text" placeholder="Type a message">
+
+                            <button class="emoji-btn">
+                                <i class="fa-regular fa-face-smile"></i>
+                            </button>
+                        </div>
+
+                        <div class="attachment-actions">
+
+                            <div class="attachment-files" id="attachmentFiles">
+                            </div>
+
+                            <button id="attachmentSendBtn" class="attachment-send">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="message-composer" id="messageComposer">
+
+                <button id="attachBtn" class="composer-icon">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+
+               
+                <textarea id="messageInput" placeholder="Type a message" rows="1"></textarea>
+
+                <button id="sendBtn" class="composer-icon send">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+
+                <input type="file" id="fileInput" multiple hidden>
+
+            </div>
+
+        </section> -->
+        
         <section class="chat-panel">
+            <div id="chatView">
             <header class="chat-header" id="chatHeader">
                 <div class="avatar">WA</div>
                 <div>
@@ -156,7 +257,113 @@
                 <input type="file" id="fileInput" multiple hidden>
 
             </div>
+            </div>
+  <!-- Settings Panel -->
+            <div id="settingsPanel" class="settings-panel hidden">
+                <div class="settings-header">
+                    <button id="closeSettingsBtn" class="icon-back" type="button" aria-label="Close settings">
+                        <i class="fa-solid fa-arrow-left fa-icon"></i>
+                    </button>
+                    <div>
+                        <h2>WhatsApp Configuration</h2>
+                        <p>Business Account Settings</p>
+                    </div>
+                </div>
+                <div class="settings-content">
+                    <div class="settings-section">
+                        <h3>Business Account</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="configPhoneId">Phone Number ID</label>
+                                <input type="text" id="configPhoneId" placeholder="Enter phone number ID">
+                            </div>
 
+                            <div class="form-group">
+                                <label for="configVerifyToken">Verify Token</label>
+                                <div class="password-wrapper">
+                                    <input type="password" id="configVerifyToken" placeholder="Enter verify token">
+                                    <button type="button" class="toggle-password" id="toggleVerifyToken">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="configAccessToken">Access Token</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="configAccessToken" placeholder="Enter access token">
+                                <button type="button" class="toggle-password" id="toggleAccessToken">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Welcome Messages</h3>
+                        <div class="form-group">
+                            <label for="configWelcomeGuj">Welcome Message (Gujarati)</label>
+                            <textarea id="configWelcomeGuj" rows="3" placeholder="Enter Gujarati welcome message"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="configWelcomeHindi">Welcome Message (Hindi)</label>
+                            <textarea id="configWelcomeHindi" rows="3" placeholder="Enter Hindi welcome message"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Location Message</h3>
+                        <div class="form-group">
+                            <textarea id="configLocationMessage" rows="3" placeholder="Enter Location message template"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Custom Message</h3>
+                        <div class="form-group">
+                            <textarea id="configCustomMsg" rows="3" placeholder="Enter custom message template"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3>Brochure</h3>
+                        <div class="brochure-info">
+                            <div class="brochure-row">
+                                <span class="brochure-label">Current File:</span>
+                                <span class="brochure-value" id="currentBrochureFile">Brochure.pdf</span>
+                            </div>
+                            <div class="brochure-row">
+                                <span class="brochure-label">Media ID:</span>
+                                <span class="brochure-value" id="currentBrochureMediaId">1043xxxxxxxx</span>
+                            </div>
+                            <div class="brochure-row">
+                                <span class="brochure-label">Uploaded Date:</span>
+                                <span class="brochure-value" id="currentBrochureUploaded">01/11/2026</span>
+                            </div>
+                            <div class="brochure-row">
+                                <span class="brochure-label">ReUpload Date:</span>
+                                <span class="brochure-value" id="currentBrochureReupload">00/00/0000</span>
+                            </div>
+                            <p class="brochure-note">
+    <i class="fa-solid fa-circle-info"></i>
+    WhatsApp Media IDs expire after approximately <strong>30 days</strong>. Please re-upload the brochure before the <strong>Re-Upload date</strong>; otherwise, the brochure may not be sent automatically to users.
+</p>
+                        </div>
+                        <button type="button" class="upload-brochure-btn" id="uploadBrochureBtn">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            Upload New Brochure
+                        </button>
+                        <input type="file" id="brochureInput" hidden>
+                    </div>
+
+                    <div class="settings-footer">
+                        <button type="button" class="save-config-btn" id="saveConfigBtn">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            Save Configuration
+                        </button>
+                    </div>
+                </div>
+            </div>
         </section>
     </main>
 

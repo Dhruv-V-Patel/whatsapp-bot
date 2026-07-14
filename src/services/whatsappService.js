@@ -5,8 +5,10 @@ const fs = require("fs");
 const path = require("path");
 const FormData = require("form-data");
 const mime = require("mime-types");
+const uploadWhatsappMedia = require("./uploadWhatsappMediaService");
 
 class WhatsAppService {
+
   async saveOutgoingMessage({
     phone,
     messageType,
@@ -387,38 +389,43 @@ https://maps.app.goo.gl/k3ujcVXA3LUzFAWt6`,
 
   async sendFileMessage(phone, file, caption = "") {
     // Upload file to WhatsApp
+const {
+  mediaId,
+  mimeType,
+  ext,
+} = await uploadWhatsappMedia(file);
+    
+// const form = new FormData();
 
-    const form = new FormData();
+    // form.append("messaging_product", "whatsapp");
 
-    form.append("messaging_product", "whatsapp");
+    // let contentType = file.mimetype;
 
-    let contentType = file.mimetype;
+    // const ext = path.extname(file.originalname || "").toLowerCase() || `.${mime.extension(file.mimetype || "")}` || "";
 
-    const ext = path.extname(file.originalname || "").toLowerCase() || `.${mime.extension(file.mimetype || "")}` || "";
+    // if (
+    //   contentType === "video/mpeg" &&
+    //   [".mp3", ".mpeg"].includes(ext)
+    // ) {
+    //   contentType = "audio/mpeg";
+    // }
+    // form.append("file", fs.createReadStream(file.path), {
+    //   filename: file.originalname,
+    //   contentType,
+    // });
 
-    if (
-      contentType === "video/mpeg" &&
-      [".mp3", ".mpeg"].includes(ext)
-    ) {
-      contentType = "audio/mpeg";
-    }
-    form.append("file", fs.createReadStream(file.path), {
-      filename: file.originalname,
-      contentType,
-    });
-
-    const uploadResponse = await axios.post(
-      `https://graph.facebook.com/v25.0/${process.env.PHONE_NUMBER_ID}/media`,
-      form,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
-          ...form.getHeaders(),
-        },
-      },
-    );
-
-    const mediaId = uploadResponse.data.id;
+    // const uploadResponse = await axios.post(
+    //   `https://graph.facebook.com/v25.0/${process.env.PHONE_NUMBER_ID}/media`,
+    //   form,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+    //       ...form.getHeaders(),
+    //     },
+    //   },
+    // );
+    //
+    // const mediaId = uploadResponse.data.id;
 
     // Detect WhatsApp media type
     //let type = "document";
@@ -534,7 +541,7 @@ if (IMAGE_EXTENSIONS.has(ext)) {
       mediaId,
       mediaUrl,
       fileName: file.originalname,
-      mimeType: contentType || file.mimetype,
+      mimeType: mimeType || contentType || file.mimetype,
       payload: sendResponse.data,
     });
   }

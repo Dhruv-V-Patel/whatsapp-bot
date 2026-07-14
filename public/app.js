@@ -10,7 +10,6 @@ const filePreview = document.getElementById("filePreview");
 const previewFileName = document.getElementById("previewFileName");
 const previewFileSize = document.getElementById("previewFileSize");
 const removeFileBtn = document.getElementById("closePreview");
-const thumbIcon = document.getElementById("attachmentThumbIcon");
 const attachmentSendBtn = document.getElementById("attachmentSendBtn");
 const captionInput = document.getElementById("captionInput");
 const attachmentFiles = document.getElementById("attachmentFiles");
@@ -28,24 +27,254 @@ let conversations = [];
 let selectedPhone = null;
 let selectedFiles = [];
 
+const settingsView = document.getElementById("settingsPanel");
+const settingsBtn = document.getElementById("settingsButton");
+const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+const saveSettingsBtn = document.getElementById("saveConfigBtn");
+const toggleAccessTokenBtn = document.getElementById("toggleAccessToken");
+const toggleVerifyToken = document.getElementById("toggleVerifyToken");
+const uploadBrochureBtn = document.getElementById("uploadBrochureBtn");
+const brochureInput = document.getElementById("brochureInput");
+const chatView = document.getElementById("chatView");
+const uploadedEl = document.getElementById("currentBrochureUploaded");
+const reuploadEl = document.getElementById("currentBrochureReupload");
+
 
 document
   .getElementById("closeUnsupportedModal")
   .addEventListener("click", () => {
     unsupportedModal.classList.add("hidden");
   });
+const openSettings = async () => {
+  settingsView.classList.remove("hidden");
+  chatView.classList.add("hidden");
+  await loadSettings();
+};
+const closeSettings = () => {
+  settingsView.classList.add("hidden");
+  chatView.classList.remove("hidden");
+};
+
+settingsBtn?.addEventListener("click", () => {
+  openSettings();
+});
+
+saveSettingsBtn?.addEventListener("click", () => {
+  saveConfiguration(); // or your save function
+});
+
+closeSettingsBtn?.addEventListener("click", () => {
+  closeSettings();
+});
+
+toggleAccessTokenBtn?.addEventListener("click", () => {
+  const input = document.getElementById("configAccessToken");
+  const icon = toggleAccessTokenBtn.querySelector("i");
+  if (input.type === "password") {
+    input.type = "text";
+    icon.classList.remove("fa-eye");
+    icon.classList.add("fa-eye-slash");
+  } else {
+    input.type = "password";
+    icon.classList.remove("fa-eye-slash");
+    icon.classList.add("fa-eye");
+  }
+});
+toggleVerifyToken?.addEventListener("click", () => {
+  const input = document.getElementById("configVerifyToken");
+  const icon = toggleVerifyToken.querySelector("i");
+  if (input.type === "password") {
+    input.type = "text";
+    icon.classList.remove("fa-eye");
+    icon.classList.add("fa-eye-slash");
+  } else {
+    input.type = "password";
+    icon.classList.remove("fa-eye-slash");
+    icon.classList.add("fa-eye");
+  }
+});
+const loadSettings = async () => {
+    try {
+        const res = await fetch("/api/whatsapp-config");
+
+        if (!res.ok) {
+            throw new Error("Failed to load configuration");
+        }
+
+        const config = await res.json();
+
+        document.getElementById("configPhoneId").value =
+            config.phone_number_id || "";
+
+        document.getElementById("configVerifyToken").value =
+            config.wa_verify_token || "";
+
+        document.getElementById("configAccessToken").value =
+            config.whatsapp_access_token || "";
+
+        document.getElementById("configWelcomeGuj").value =
+            config.welcome_message_gu || "";
+
+        document.getElementById("configWelcomeHindi").value =
+            config.welcome_message_hi || "";
+
+        document.getElementById("configLocationMessage").value =
+            config.location_message || "";
+        document.getElementById("configCustomMsg").value =
+            config.custom_message || "";
+
+        document.getElementById("currentBrochureFile").textContent =
+            config.brochure_file_name || "No brochure uploaded";
+
+        document.getElementById("currentBrochureMediaId").textContent =
+            config.brochure_media_id || "-";
+
+        const uploadedEl = document.getElementById("currentBrochureUploaded");
+const reuploadEl = document.getElementById("currentBrochureReupload");
+
+if (config.brochure_uploaded_at) {
+    const uploaded = new Date(config.brochure_uploaded_at);
+
+    uploadedEl.textContent = uploaded.toLocaleString("en-IN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+    });
+
+    const reupload = new Date(uploaded);
+    reupload.setDate(reupload.getDate() + 30);
+
+    reuploadEl.textContent = reupload.toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    });
+
+} else {
+    uploadedEl.textContent = "-";
+    reuploadEl.textContent = "-";
+}
+
+    } catch (err) {
+        console.error(err);
+        await showConfirm({
+            title: "Configuration Error",
+            message: "Unable to load the WhatsApp configuration.",
+            okText: "OK"
+        });
+    }
+};
+saveSettingsBtn?.addEventListener("click", async () => {
+    try {
+        saveSettingsBtn.disabled = true;
+
+        const body = {
+            phone_number_id: document.getElementById("configPhoneId").value.trim(),
+            wa_verify_token: document.getElementById("configVerifyToken").value.trim(),
+            whatsapp_access_token: document.getElementById("configAccessToken").value.trim(),
+            welcome_message_gu: document.getElementById("configWelcomeGuj").value.trim(),
+            welcome_message_hi: document.getElementById("configWelcomeHindi").value.trim(),
+            custom_message: document.getElementById("configCustomMsg").value.trim(),
+            location_message: document.getElementById("configLocationMessage").value.trim()
+        };
+
+        const res = await fetch("/api/whatsapp-config", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error || "Failed to save configuration.");
+        }
+
+        // alert("Configuration saved successfully.");
+        await showConfirm({
+            title: "Configuration Saved",
+            message: "WhatsApp configuration has been saved successfully.",
+            okText: "OK"
+        });
+
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    } finally {
+        saveSettingsBtn.disabled = false;
+    }
+});
+uploadBrochureBtn?.addEventListener("click", () => {
+    brochureInput.click();
+});
+brochureInput?.addEventListener("change", async () => {
+    if (!brochureInput.files.length) {
+        return;
+    }
+
+    const file = brochureInput.files[0];
+
+    if (file.type !== "application/pdf") {
+        alert("Only PDF files are allowed.");
+        brochureInput.value = "";
+        return;
+    }
+
+    try {
+        uploadBrochureBtn.disabled = true;
+
+        const formData = new FormData();
+        formData.append("brochure", file);
+
+        const res = await fetch("/api/whatsapp-config/brochure", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            throw new Error(data.error || "Upload failed.");
+        }
+
+        document.getElementById("currentBrochureFile").textContent =
+            data.brochure_file_name;
+
+        document.getElementById("currentBrochureMediaId").textContent =
+            data.brochure_media_id;
+
+        await showConfirm({
+            title: "Brochure Uploaded",
+            message: "The brochure has been uploaded successfully.",
+            okText: "OK"
+        });
+
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    } finally {
+        brochureInput.value = "";
+        uploadBrochureBtn.disabled = false;
+    }
+});
 
 const showConfirm = ({
     title,
     message,
     okText = "Delete",
-    cancelText = "Cancel",
+    cancelText,
 }) => {
     return new Promise((resolve) => {
 
         confirmTitle.textContent = title;
         confirmMessage.textContent = message;
-
+        confirmCancel.style.display = cancelText ? "" : "none";
         confirmOk.textContent = okText;
         confirmCancel.textContent = cancelText;
 
@@ -80,6 +309,17 @@ const showUnsupportedFiles = (files) => {
   `;
 
   unsupportedModal.classList.remove("hidden");
+};
+
+const restoreChatView = () => {
+    filePreview.classList.add("hidden");
+    messageList.style.display = "block";
+    messageComposer.classList.add("show");
+
+    requestAnimationFrame(() => {
+        messagesContainer.scrollTop =
+            messagesContainer.scrollHeight;
+    });
 };
 
 function escapeHtml(value) {
@@ -169,16 +409,7 @@ const closeFilePreview = () => {
 
   previewFileName.textContent = "";
   previewFileSize.textContent = "";
-
-  filePreview.classList.add("hidden");
-  messageList.style.display = "block";
-  messageComposer.classList.add("show");
-
-  const messagesContainer = document.querySelector(".messages");
-
-requestAnimationFrame(() => {
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-});
+  restoreChatView();
 
 };
 
@@ -251,10 +482,7 @@ attachmentSendBtn.onclick = async () => {
     selectedFiles = [];
     fileInput.value = "";
     captionInput.value = "";
-
-    filePreview.classList.add("hidden");
-    messageList.style.display = "block";
-    messageComposer.classList.add("show");
+    restoreChatView();
 
     await loadMessages();
   } catch (err) {
@@ -360,14 +588,7 @@ removeFileBtn.onclick = () => {
   captionInput.value = "";
 
   renderSelectedFiles();
-  filePreview.classList.add("hidden");
-  messageList.style.display = "block";
-  messageComposer.classList.add("show");
-  const messagesContainer = document.querySelector(".messages");
-
-requestAnimationFrame(() => {
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-});
+  restoreChatView();
 };
 
 const renderSelectedFiles = () => {
@@ -375,11 +596,7 @@ const renderSelectedFiles = () => {
     attachmentFiles.innerHTML = "";
     previewFileName.textContent = "";
     previewFileSize.textContent = "";
-
-    filePreview.classList.add("hidden");
-    messageList.style.display = "block";
-    messageComposer.classList.add("show");
-
+    restoreChatView();
     return;
   }
 
@@ -444,20 +661,7 @@ attachmentFiles.addEventListener("click", (e) => {
     captionInput.value = "";
     previewFileName.textContent = "";
     previewFileSize.textContent = "";
-
-    filePreview.classList.add("hidden");
-    messageList.style.display = "block";
-    messageComposer.classList.add("show");
-
-    // Scroll back to latest message
-    //messageList.scrollTop = messageList.scrollHeight;
-
-    const messagesContainer = document.querySelector(".messages");
-
-requestAnimationFrame(() => {
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-});
-
+    restoreChatView();
     return;
   }
   renderSelectedFiles();
@@ -1145,4 +1349,8 @@ socket.on("connect", () => {});
 socket.on("new-message", (msg) => {
   // reload chat automatically
   loadMessages();
+});
+
+socket.on("config-updated", async () => {
+    await loadSettings();
 });

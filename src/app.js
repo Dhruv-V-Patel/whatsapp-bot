@@ -5,6 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const webhookRoute = require("./routes/webhook");
 const messagesRoute = require("./routes/messages");
+const whatsappConfigRoute = require("./routes/whatsappConfig");
 
 const app = express();
 const startUploadCleanup = require("./utils/cleanupUploads");
@@ -19,7 +20,7 @@ app.use(
 );
 app.use("/webhook/whatsapp", webhookRoute);
 app.use("/api/messages", messagesRoute);
-
+app.use("/api",whatsappConfigRoute);
 
 app.get("/:page", (req, res, next) => {
   const filePath = path.join(__dirname, "../public", `${req.params.page}.html`);

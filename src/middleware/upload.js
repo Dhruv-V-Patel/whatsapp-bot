@@ -44,15 +44,37 @@ const getFolder = (file) => {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // const folder = getFolder(file.mimetype);
-    const folder = getFolder(file);
+    // const folder = getFolder(file);
 
-    const uploadPath = path.join(
-      process.cwd(),
-      "public",
-      "uploads",
-      "whatsapp",
-      folder
-    );
+    // const uploadPath = path.join(
+    //   process.cwd(),
+    //   "public",
+    //   "uploads",
+    //   "whatsapp",
+    //   folder
+    // );
+    let uploadPath;
+
+    // Save brochure in its own folder
+    if (req.originalUrl.includes("/whatsapp-config/brochure")) {
+      uploadPath = path.join(
+        process.cwd(),
+        "public",
+        "uploads",
+        "whatsapp",
+        "brochure"
+      );
+    } else {
+      const folder = getFolder(file);
+
+      uploadPath = path.join(
+        process.cwd(),
+        "public",
+        "uploads",
+        "whatsapp",
+        folder
+      );
+    }
 
     fs.mkdirSync(uploadPath, { recursive: true });
 
