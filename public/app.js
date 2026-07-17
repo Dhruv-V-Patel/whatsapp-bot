@@ -38,7 +38,7 @@ const brochureInput = document.getElementById("brochureInput");
 const chatView = document.getElementById("chatView");
 const uploadedEl = document.getElementById("currentBrochureUploaded");
 const reuploadEl = document.getElementById("currentBrochureReupload");
-
+const openBrochureBtn = document.getElementById("openBrochureBtn");
 
 document
   .getElementById("closeUnsupportedModal")
@@ -93,49 +93,58 @@ toggleVerifyToken?.addEventListener("click", () => {
     icon.classList.add("fa-eye");
   }
 });
+
 const loadSettings = async () => {
-    try {
-        const res = await fetch("/api/whatsapp-config");
+  try {
+    const res = await fetch("/api/whatsapp-config");
 
-        if (!res.ok) {
-            throw new Error("Failed to load configuration");
-        }
+    if (!res.ok) {
+      throw new Error("Failed to load configuration");
+    }
 
-        const config = await res.json();
+    const config = await res.json();
 
-        document.getElementById("configPhoneId").value =
-            config.phone_number_id || "";
+    document.getElementById("configPhoneId").value =
+      config.phone_number_id || "";
 
-        document.getElementById("configVerifyToken").value =
-            config.wa_verify_token || "";
+    document.getElementById("configVerifyToken").value =
+      config.wa_verify_token || "";
 
-        document.getElementById("configAccessToken").value =
-            config.whatsapp_access_token || "";
+    document.getElementById("configAccessToken").value =
+      config.whatsapp_access_token || "";
 
-        document.getElementById("configWelcomeGuj").value =
-            config.welcome_message_gu || "";
+    document.getElementById("configWelcomeGuj").value =
+      config.welcome_message_gu || "";
 
-        document.getElementById("configWelcomeHindi").value =
-            config.welcome_message_hi || "";
+    document.getElementById("configWelcomeHindi").value =
+      config.welcome_message_hi || "";
 
-        document.getElementById("configLocationMessage").value =
-            config.location_message || "";
-        document.getElementById("configCustomMsg").value =
-            config.custom_message || "";
+    document.getElementById("configLocationMessage").value =
+      config.location_message || "";
+    document.getElementById("configCustomMsg").value =
+      config.custom_message || "";
 
-        document.getElementById("currentBrochureFile").textContent =
-            config.brochure_file_name || "No brochure uploaded";
+    document.getElementById("currentBrochureFile").textContent =
+      config.brochure_file_name || "No brochure uploaded";
 
-        document.getElementById("currentBrochureMediaId").textContent =
-            config.brochure_media_id || "-";
+    document.getElementById("currentBrochureMediaId").textContent =
+      config.brochure_media_id || "-";
+    if (config.brochure_file_url) {
+      openBrochureBtn.hidden = false;
 
-        const uploadedEl = document.getElementById("currentBrochureUploaded");
-const reuploadEl = document.getElementById("currentBrochureReupload");
+      openBrochureBtn.onclick = () => {
+        window.open(config.brochure_file_url, "_blank");
+      };
+    } else {
+      openBrochureBtn.hidden = true;
+    }
+    const uploadedEl = document.getElementById("currentBrochureUploaded");
+    const reuploadEl = document.getElementById("currentBrochureReupload");
 
-if (config.brochure_uploaded_at) {
-    const uploaded = new Date(config.brochure_uploaded_at);
+    if (config.brochure_uploaded_at) {
+      const uploaded = new Date(config.brochure_uploaded_at);
 
-    uploadedEl.textContent = uploaded.toLocaleString("en-IN", {
+      uploadedEl.textContent = uploaded.toLocaleString("en-IN", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -143,168 +152,175 @@ if (config.brochure_uploaded_at) {
         minute: "2-digit",
         second: "2-digit",
         hour12: false,
-    });
+      });
 
-    const reupload = new Date(uploaded);
-    reupload.setDate(reupload.getDate() + 30);
+      const reupload = new Date(uploaded);
+      reupload.setDate(reupload.getDate() + 30);
 
-    reuploadEl.textContent = reupload.toLocaleDateString("en-IN", {
+      reuploadEl.textContent = reupload.toLocaleDateString("en-IN", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
-    });
-
-} else {
-    uploadedEl.textContent = "-";
-    reuploadEl.textContent = "-";
-}
-
-    } catch (err) {
-        console.error(err);
-        await showConfirm({
-            title: "Configuration Error",
-            message: "Unable to load the WhatsApp configuration.",
-            okText: "OK"
-        });
+      });
+    } else {
+      uploadedEl.textContent = "-";
+      reuploadEl.textContent = "-";
     }
+  } catch (err) {
+    console.error(err);
+    await showConfirm({
+      title: "Configuration Error",
+      message: "Unable to load the WhatsApp configuration.",
+      okText: "OK",
+    });
+  }
 };
 saveSettingsBtn?.addEventListener("click", async () => {
-    try {
-        saveSettingsBtn.disabled = true;
+  try {
+    saveSettingsBtn.disabled = true;
 
-        const body = {
-            phone_number_id: document.getElementById("configPhoneId").value.trim(),
-            wa_verify_token: document.getElementById("configVerifyToken").value.trim(),
-            whatsapp_access_token: document.getElementById("configAccessToken").value.trim(),
-            welcome_message_gu: document.getElementById("configWelcomeGuj").value.trim(),
-            welcome_message_hi: document.getElementById("configWelcomeHindi").value.trim(),
-            custom_message: document.getElementById("configCustomMsg").value.trim(),
-            location_message: document.getElementById("configLocationMessage").value.trim()
-        };
+    const body = {
+      phone_number_id: document.getElementById("configPhoneId").value.trim(),
+      wa_verify_token: document
+        .getElementById("configVerifyToken")
+        .value.trim(),
+      whatsapp_access_token: document
+        .getElementById("configAccessToken")
+        .value.trim(),
+      welcome_message_gu: document
+        .getElementById("configWelcomeGuj")
+        .value.trim(),
+      welcome_message_hi: document
+        .getElementById("configWelcomeHindi")
+        .value.trim(),
+      custom_message: document.getElementById("configCustomMsg").value.trim(),
+      location_message: document
+        .getElementById("configLocationMessage")
+        .value.trim(),
+    };
 
-        const res = await fetch("/api/whatsapp-config", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(body)
-        });
+    const res = await fetch("/api/whatsapp-config", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
 
-        const data = await res.json();
+    const data = await res.json();
 
-        if (!res.ok) {
-            throw new Error(data.error || "Failed to save configuration.");
-        }
-
-        // alert("Configuration saved successfully.");
-        await showConfirm({
-            title: "Configuration Saved",
-            message: "WhatsApp configuration has been saved successfully.",
-            okText: "OK"
-        });
-
-    } catch (err) {
-        console.error(err);
-        alert(err.message);
-    } finally {
-        saveSettingsBtn.disabled = false;
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to save configuration.");
     }
+
+    // alert("Configuration saved successfully.");
+    await showConfirm({
+      title: "Configuration Saved",
+      message: "WhatsApp configuration has been saved successfully.",
+      okText: "OK",
+    });
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  } finally {
+    saveSettingsBtn.disabled = false;
+  }
 });
 uploadBrochureBtn?.addEventListener("click", () => {
-    brochureInput.click();
+  brochureInput.click();
 });
 brochureInput?.addEventListener("change", async () => {
-    if (!brochureInput.files.length) {
-        return;
+  if (!brochureInput.files.length) {
+    return;
+  }
+
+  const file = brochureInput.files[0];
+
+  if (file.type !== "application/pdf") {
+    alert("Only PDF files are allowed.");
+    brochureInput.value = "";
+    return;
+  }
+
+  try {
+    uploadBrochureBtn.disabled = true;
+
+    const formData = new FormData();
+    formData.append("brochure", file);
+
+    const res = await fetch("/api/whatsapp-config/brochure", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Upload failed.");
     }
 
-    const file = brochureInput.files[0];
+    document.getElementById("currentBrochureFile").textContent =
+      data.brochure_file_name;
 
-    if (file.type !== "application/pdf") {
-        alert("Only PDF files are allowed.");
-        brochureInput.value = "";
-        return;
+    document.getElementById("currentBrochureMediaId").textContent =
+      data.brochure_media_id;
+
+    if (data.brochure_file_url) {
+      openBrochureBtn.hidden = false;
+
+      openBrochureBtn.onclick = () => {
+        window.open(data.brochure_file_url, "_blank");
+      };
     }
-
-    try {
-        uploadBrochureBtn.disabled = true;
-
-        const formData = new FormData();
-        formData.append("brochure", file);
-
-        const res = await fetch("/api/whatsapp-config/brochure", {
-            method: "POST",
-            body: formData
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            throw new Error(data.error || "Upload failed.");
-        }
-
-        document.getElementById("currentBrochureFile").textContent =
-            data.brochure_file_name;
-
-        document.getElementById("currentBrochureMediaId").textContent =
-            data.brochure_media_id;
-
-        await showConfirm({
-            title: "Brochure Uploaded",
-            message: "The brochure has been uploaded successfully.",
-            okText: "OK"
-        });
-
-    } catch (err) {
-        console.error(err);
-        alert(err.message);
-    } finally {
-        brochureInput.value = "";
-        uploadBrochureBtn.disabled = false;
-    }
+    await showConfirm({
+      title: "Brochure Uploaded",
+      message: "The brochure has been uploaded successfully.",
+      okText: "OK",
+    });
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  } finally {
+    brochureInput.value = "";
+    uploadBrochureBtn.disabled = false;
+  }
 });
 
-const showConfirm = ({
-    title,
-    message,
-    okText = "Delete",
-    cancelText,
-}) => {
-    return new Promise((resolve) => {
+const showConfirm = ({ title, message, okText = "Delete", cancelText }) => {
+  return new Promise((resolve) => {
+    confirmTitle.textContent = title;
+    confirmMessage.textContent = message;
+    confirmCancel.style.display = cancelText ? "" : "none";
+    confirmOk.textContent = okText;
+    confirmCancel.textContent = cancelText;
 
-        confirmTitle.textContent = title;
-        confirmMessage.textContent = message;
-        confirmCancel.style.display = cancelText ? "" : "none";
-        confirmOk.textContent = okText;
-        confirmCancel.textContent = cancelText;
+    confirmModal.classList.remove("hidden");
 
-        confirmModal.classList.remove("hidden");
+    const close = (result) => {
+      confirmModal.classList.add("hidden");
 
-        const close = (result) => {
-            confirmModal.classList.add("hidden");
+      confirmOk.onclick = null;
+      confirmCancel.onclick = null;
 
-            confirmOk.onclick = null;
-            confirmCancel.onclick = null;
+      resolve(result);
+    };
 
-            resolve(result);
-        };
+    confirmOk.onclick = () => close(true);
+    confirmCancel.onclick = () => close(false);
 
-        confirmOk.onclick = () => close(true);
-        confirmCancel.onclick = () => close(false);
-
-        confirmModal.onclick = (e) => {
-            if (e.target === confirmModal) {
-                close(false);
-            }
-        };
-    });
+    confirmModal.onclick = (e) => {
+      if (e.target === confirmModal) {
+        close(false);
+      }
+    };
+  });
 };
 
 const showUnsupportedFiles = (files) => {
   unsupportedFilesDiv.innerHTML = `
     <p>The following files are not supported by WhatsApp:</p>
     <ul>
-      ${files.map(file => `<li>${file}</li>`).join("")}
+      ${files.map((file) => `<li>${file}</li>`).join("")}
     </ul>
   `;
 
@@ -312,14 +328,13 @@ const showUnsupportedFiles = (files) => {
 };
 
 const restoreChatView = () => {
-    filePreview.classList.add("hidden");
-    messageList.style.display = "block";
-    messageComposer.classList.add("show");
+  filePreview.classList.add("hidden");
+  messageList.style.display = "block";
+  messageComposer.classList.add("show");
 
-    requestAnimationFrame(() => {
-        messagesContainer.scrollTop =
-            messagesContainer.scrollHeight;
-    });
+  requestAnimationFrame(() => {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  });
 };
 
 function escapeHtml(value) {
@@ -346,25 +361,24 @@ messageInput.addEventListener("keydown", (e) => {
   }
 });
 
-
 const BASE_HEIGHT = 58;
 
 messageInput.addEventListener("input", () => {
-    // Resize textarea
-    messageInput.style.height = "0px";
+  // Resize textarea
+  messageInput.style.height = "0px";
 
-    const newHeight = Math.min(messageInput.scrollHeight, 140);
-    messageInput.style.height = newHeight + "px";
+  const newHeight = Math.min(messageInput.scrollHeight, 140);
+  messageInput.style.height = newHeight + "px";
 
-     if (messageInput.scrollHeight > 140) {
-        messageInput.style.overflowY = "auto";
-      } else {
-        messageInput.style.overflowY = "hidden";
-      }
-    // Resize composer with textarea
-    messageComposer.style.height = Math.max(BASE_HEIGHT, newHeight + 24) + "px";
+  if (messageInput.scrollHeight > 140) {
+    messageInput.style.overflowY = "auto";
+  } else {
+    messageInput.style.overflowY = "hidden";
+  }
+  // Resize composer with textarea
+  messageComposer.style.height = Math.max(BASE_HEIGHT, newHeight + 24) + "px";
 
-    // Keep icons centered for one line, bottom aligned for multiple lines
+  // Keep icons centered for one line, bottom aligned for multiple lines
   if (newHeight <= 40) {
     messageComposer.style.alignItems = "center";
   } else {
@@ -410,7 +424,6 @@ const closeFilePreview = () => {
   previewFileName.textContent = "";
   previewFileSize.textContent = "";
   restoreChatView();
-
 };
 
 document.getElementById("sendBtn").onclick = async () => {
@@ -441,11 +454,11 @@ document.getElementById("sendBtn").onclick = async () => {
     messageInput.style.overflowY = "hidden";
     // messageInput.scrollTop = 0;
 
-// Reset composer
-messageComposer.style.height = BASE_HEIGHT + "px";
-messageComposer.style.alignItems = "center";
+    // Reset composer
+    messageComposer.style.height = BASE_HEIGHT + "px";
+    messageComposer.style.alignItems = "center";
 
-// Optional: keep cursor
+    // Optional: keep cursor
     // loadMessages();
   } catch {
     alert("Failed to send message.");
@@ -523,40 +536,37 @@ fileInput.onchange = () => {
 
   const unsupported = [];
 
-const validFiles = Array.from(fileInput.files).filter(file => {
-  const ext = file.name.split(".").pop()?.toLowerCase();
+  const validFiles = Array.from(fileInput.files).filter((file) => {
+    const ext = file.name.split(".").pop()?.toLowerCase();
 
-  // Fix browsers reporting audio .mpeg as video/mpeg
-  if (
-    file.type === "video/mpeg" &&
-    ["mp3", "mpeg"].includes(ext)
-  ) {
+    // Fix browsers reporting audio .mpeg as video/mpeg
+    if (file.type === "video/mpeg" && ["mp3", "mpeg"].includes(ext)) {
+      return true;
+    }
+
+    if (!SUPPORTED_TYPES.includes(file.type)) {
+      unsupported.push(file.name);
+      return false;
+    }
+
     return true;
+  });
+
+  if (unsupported.length) {
+    // alert(
+    //   `These files are not supported by WhatsApp:\n\n${unsupported.join("\n")}`
+    // );
+    showUnsupportedFiles(unsupported);
   }
 
-  if (!SUPPORTED_TYPES.includes(file.type)) {
-    unsupported.push(file.name);
-    return false;
+  if (!validFiles.length) {
+    fileInput.value = "";
+    return;
   }
 
-  return true;
-});
+  const newFiles = validFiles;
 
-if (unsupported.length) {
-  // alert(
-  //   `These files are not supported by WhatsApp:\n\n${unsupported.join("\n")}`
-  // );
-  showUnsupportedFiles(unsupported);
-}
-
-if (!validFiles.length) {
-  fileInput.value = "";
-  return;
-}
-
-const newFiles = validFiles;
-
- // const newFiles = Array.from(fileInput.files);
+  // const newFiles = Array.from(fileInput.files);
 
   // Prevent duplicates
   newFiles.forEach((file) => {
@@ -754,12 +764,10 @@ const linkify = (text = "") => {
   return escapeHtml(text).replace(
     /\b((?:https?:\/\/|www\.)[^\s<]+|(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?:\/[^\s<]*)?)/gi,
     (url) => {
-      const href = /^https?:\/\//i.test(url)
-        ? url
-        : `https://${url}`;
+      const href = /^https?:\/\//i.test(url) ? url : `https://${url}`;
 
       return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="message-link">${url}</a>`;
-    }
+    },
   );
 };
 
@@ -965,7 +973,7 @@ const getChatPreview = (last) => {
 
     case "document":
       return `<i class="fa-regular fa-file-lines"></i> ${escapeHtml(
-        last.file_name || "Document"
+        last.file_name || "Document",
       )}`;
 
     case "location":
@@ -1002,7 +1010,7 @@ function renderChatList(options = {}) {
       const showTime = last && !last.is_placeholder;
 
       const timeText = showTime ? formatTime(last.created_at) : "";
-      
+
       // let preview = last?.message || "";
 
       // const mediaType = getMediaType(last?.mime_type);
@@ -1012,7 +1020,7 @@ function renderChatList(options = {}) {
       // }
 
       const preview = getChatPreview(last);
-      
+
       //console.log(conversation.phone, conversation.unread_count);
       //<time class="chat-time">${escapeHtml(formatTime(conversation.lastMessage?.created_at))}</time>
       // ${escapeHtml(preview)}
@@ -1057,11 +1065,13 @@ const formatDateDivider = (value) => {
   const now = new Date();
 
   const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startMsg = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-  const diffDays = Math.floor(
-    (startToday - startMsg) / (1000 * 60 * 60 * 24)
+  const startMsg = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
   );
+
+  const diffDays = Math.floor((startToday - startMsg) / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
@@ -1149,13 +1159,13 @@ function renderMessages() {
   clearBtn?.addEventListener("click", async () => {
     // if (!confirm("Clear chat?")) return;
     const confirmed = await showConfirm({
-    title: `Clear chat with ${conversation.name}?`,
-    message: "Messages will be removed from Whatsapp Messenger.",
-    okText: "Clear Chat",
-    cancelText: "Cancel",
-});
+      title: `Clear chat with ${conversation.name}?`,
+      message: "Messages will be removed from Whatsapp Messenger.",
+      okText: "Clear Chat",
+      cancelText: "Cancel",
+    });
 
-if (!confirmed) return;
+    if (!confirmed) return;
 
     //console.log("Clear Btn Clicked", selectedPhone);
 
@@ -1174,14 +1184,14 @@ if (!confirmed) return;
 
   deleteBtn?.addEventListener("click", async () => {
     // if (!confirm("Delete contact?")) return;
-const confirmed = await showConfirm({
-    title: "Delete contact?",
-    message: "This contact will be deleted from Whatsapp Messenger.",
-    okText: "Delete",
-    cancelText: "Cancel, keep contact",
-});
+    const confirmed = await showConfirm({
+      title: "Delete contact?",
+      message: "This contact will be deleted from Whatsapp Messenger.",
+      okText: "Delete",
+      cancelText: "Cancel, keep contact",
+    });
 
-if (!confirmed) return;
+    if (!confirmed) return;
 
     //console.log("Delete Btn Clicked", selectedPhone);
 
@@ -1193,12 +1203,10 @@ if (!confirmed) return;
     messageComposer.classList.remove("show");
     await loadMessages();
   });
-  
+
   messageComposer.classList.add("show");
 
-  const realMessages = conversation.messages.filter(
-    (m) => !m.is_placeholder,
-  );
+  const realMessages = conversation.messages.filter((m) => !m.is_placeholder);
 
   if (!realMessages.length) {
     messageList.innerHTML = "";
@@ -1209,11 +1217,9 @@ if (!confirmed) return;
   let lastDivider = "";
 
   realMessages.forEach((message) => {
-
     const divider = formatDateDivider(message.created_at);
 
     if (divider !== lastDivider) {
-
       lastDivider = divider;
 
       html += `
@@ -1226,9 +1232,7 @@ if (!confirmed) return;
     }
 
     html += `
-      <div class="message-row ${escapeHtml(
-        message.direction || "incoming",
-      )}">
+      <div class="message-row ${escapeHtml(message.direction || "incoming")}">
 
         <article class="message-bubble">
 
@@ -1251,11 +1255,11 @@ if (!confirmed) return;
   });
 
   messageList.innerHTML = html;
-  
-// Wait until browser finishes rendering
-requestAnimationFrame(() => {
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
-});
+
+  // Wait until browser finishes rendering
+  requestAnimationFrame(() => {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  });
 }
 
 async function loadMessages() {
@@ -1294,6 +1298,9 @@ chatList.addEventListener("click", async (event) => {
   const item = event.target.closest(".chat-item");
 
   if (!item) return;
+  if (!settingsView.classList.contains("hidden")) {
+    closeSettings();
+}
 
   selectedPhone = item.dataset.phone;
   await fetch(`/api/messages/mark-read/${selectedPhone}`, {
@@ -1352,5 +1359,5 @@ socket.on("new-message", (msg) => {
 });
 
 socket.on("config-updated", async () => {
-    await loadSettings();
+  await loadSettings();
 });

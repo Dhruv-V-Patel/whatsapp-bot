@@ -298,7 +298,7 @@ async sendBrochure(phone) {
         process.env.WHATSAPP_ACCESS_TOKEN;
 
     let response;
-
+    let brochureInfo = {};
     // Try media_id first
     if (config.brochure_media_id) {
         try {
@@ -319,6 +319,13 @@ async sendBrochure(phone) {
                     },
                 }
             );
+             
+            brochureInfo = {
+                mediaUrl: config.brochure_file_url,
+                mediaId: config.brochure_media_id,
+                fileName: config.brochure_file_name || "Brochure.pdf",
+                mimeType: "application/pdf",
+            };
 
             // console.log("Brochure sent using media_id");
         } catch (err) {
@@ -349,16 +356,24 @@ async sendBrochure(phone) {
             }
         );
 
-        console.log("Brochure sent using link");
+        brochureInfo = {
+            mediaUrl: "/someshwar.pdf",
+            mediaId: null,
+            fileName: "Brochure.pdf",
+            mimeType: "application/pdf",
+        };
+
+       // console.log("Brochure sent using link");
     }
 
     if (response.status === 200 && response.data?.messages?.[0]?.id) {
         await this.saveOutgoingMessage({
             phone,
             messageType: "document",
-            fileName: "Brochure.pdf",
-            mediaUrl: "/someshwar.pdf",
-            mimeType: "application/pdf",
+            fileName: brochureInfo.fileName,
+            mediaUrl: brochureInfo.mediaUrl,
+            mediaId: brochureInfo.mediaId,
+            mimeType: brochureInfo.mimeType,
             payload: response.data,
         });
     }
@@ -693,7 +708,7 @@ async sendBrochure(phone) {
         writer.on("error", reject);
       });
 
-      console.log("Downloaded:", savePath);
+     // console.log("Downloaded:", savePath);
 
       // Return URL for frontend
       return `/uploads/whatsapp/${folder}/${safeName}`;

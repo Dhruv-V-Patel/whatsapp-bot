@@ -23,7 +23,7 @@ try {
 
   let contentType = file.mimetype;
 
-  console.log("content type:", contentType);
+  // console.log("content type:", contentType);
   const ext =
     path.extname(file.originalname || "").toLowerCase() ||
     `.${mime.extension(file.mimetype || "")}` ||

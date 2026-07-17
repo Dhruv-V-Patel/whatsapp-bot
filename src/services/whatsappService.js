@@ -682,7 +682,7 @@ if (IMAGE_EXTENSIONS.has(ext)) {
         writer.on("error", reject);
       });
 
-      console.log("Downloaded:", savePath);
+      //console.log("Downloaded:", savePath);
 
       // Return URL for frontend
       return `/uploads/whatsapp/${folder}/${safeName}`;

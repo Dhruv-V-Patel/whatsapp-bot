@@ -2416,3 +2416,45 @@ h1 {
     font-size: 18px;
   }
 }
+
+.brochure-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    font-family: inherit;
+}
+
+.open-brochure-btn,
+.upload-brochure-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.open-brochure-btn {
+    background: #fff;
+    color: #2563eb;
+    border: 1px solid #2563eb;
+    font-family: inherit;
+    font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.open-brochure-btn:hover {
+    background: #eff6ff;
+}
+
+[data-theme="dark"] .open-brochure-btn {
+    background: transparent;
+    color: #60a5fa;
+    border-color: #60a5fa;
+}
+
+[data-theme="dark"] .open-brochure-btn:hover {
+    background: rgba(96, 165, 250, 0.12);
+}

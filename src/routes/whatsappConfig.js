@@ -103,7 +103,7 @@ router.post(
             const { mediaId }  = await uploadWhatsappMedia(req.file);
             const brochureUrl = `/uploads/whatsapp/brochure/${req.file.filename}`;
 
-            console.log(brochureUrl)
+            //console.log(brochureUrl)
 
             await pool.query(
                 `
